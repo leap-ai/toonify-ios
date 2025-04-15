@@ -1,89 +1,120 @@
-# Image-to-Video Generator Mobile App
+# Toonify Mobile App
 
-This is a React Native mobile application for generating videos from images using AI. It works with the image-to-video backend to provide a seamless user experience.
+A React Native mobile application that transforms images into animated videos using AI technology. Built with Expo and React Native.
 
 ## Features
 
-- User authentication with JWT
-- Image selection from device gallery
-- Text prompt input for video generation
-- Real-time status polling for generation progress
-- Video playback of generated content
-- Generation history with thumbnails
+- **Image to Video Conversion**: Upload images and convert them into animated videos
+- **User Authentication**: 
+  - Email/Password login
+  - Google Sign-In
+  - Apple Sign-In
+- **Secure Storage**: Securely store user credentials and tokens
+- **Cross-Platform**: Works on both iOS and Android devices
 
-## Tech Stack
+## Prerequisites
 
-- [React Native](https://reactnative.dev/) - Cross-platform mobile app framework
-- [Expo](https://expo.dev/) - Development platform for React Native (SDK 52.0.0)
-- [Axios](https://axios-http.com/) - HTTP client for API requests
-- [expo-image-picker](https://docs.expo.dev/versions/latest/sdk/imagepicker/) - Image selection from device
-- [expo-secure-store](https://docs.expo.dev/versions/latest/sdk/securestore/) - Secure storage for authentication tokens
-- [react-native-video](https://github.com/react-native-video/react-native-video) - Video playback component
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js (v16 or higher)
+- Node.js (v14 or newer)
 - npm or yarn
 - Expo CLI (`npm install -g expo-cli`)
-- Expo Go app on your mobile device (SDK 52.0.0)
+- iOS Simulator (for Mac users) or Android Studio (for Android development)
+- Expo Go app on your physical device (for testing)
 
-### Installation
+## Installation
 
-1. Clone the repository
-2. Navigate to the frontend-mobile directory
-3. Install dependencies:
+1. Clone the repository:
+   ```
+   git clone <repository-url>
+   cd toonify-v1/frontend-mobile
+   ```
 
-```bash
-npm install
+2. Install dependencies:
+   ```
+   npm install
+   ```
+
+3. Create a `.env` file in the root directory with the following variables:
+   ```
+   API_URL=http://localhost:3000
+   ```
+
+## Running the App
+
+### Development Mode
+
 ```
-
-4. Start the development server:
-
-```bash
 npm start
 ```
 
-5. Use the Expo Go app on your device to scan the QR code
+This will start the Expo development server. You can then:
+- Press `i` to open in iOS simulator
+- Press `a` to open in Android emulator
+- Scan the QR code with the Expo Go app on your physical device
 
-### Troubleshooting
+### Building for Production
 
-If you encounter the "EMFILE: too many open files" error:
+```
+expo build:android
+expo build:ios
+```
 
-1. Make sure you're using Node.js v16 or higher
-2. Try running with the `--no-dev` flag:
-   ```bash
-   npx expo start --no-dev
-   ```
-3. If using a physical device, make sure your phone and computer are on the same network
+## Project Structure
 
-## Usage
+- `App.js` - Main application component
+- `auth/` - Authentication related components and context
+  - `AuthContext.js` - Authentication state management
+  - `SignInScreen.js` - Sign in screen
+  - `SignUpScreen.js` - Sign up screen
+- `assets/` - Images, fonts, and other static assets
 
-1. Login with the demo account
-2. Select an image from your device
-3. Enter a prompt describing the animation you want
-4. Tap "Generate Video" to start the generation process
-5. Wait for the generation to complete
-6. View your generated video
-7. Access your generation history at the bottom of the screen
+## Authentication Flow
+
+The app uses a context-based authentication system:
+1. User credentials are stored securely using `expo-secure-store`
+2. Authentication tokens are managed in the `AuthContext`
+3. API requests include the authentication token in headers
+
+## Debugging
+
+### View Logs
+
+```
+expo logs
+```
+
+### Developer Menu
+
+- Shake your device or press:
+  - iOS Simulator: `Cmd + D`
+  - Android Simulator: `Cmd + M`
+
+### Remote Debugging
+
+1. Open the developer menu
+2. Select "Debug Remote JS" to open Chrome DevTools
+3. View console logs, network requests, and set breakpoints
+
+### Error Handling
+
+The app includes an Error Boundary component that catches and displays React errors on screen and logs them to the console.
 
 ## API Integration
 
-The app communicates with the backend API running on `http://localhost:3000`. If you're running the app on a physical device, you'll need to update the `API_BASE` constant in `App.js` to point to your computer's IP address or use a service like ngrok to expose your local server.
-
-## Development
-
-The app is structured as a single-screen application with the following components:
-
-- Authentication flow
-- Image selection
-- Prompt input
+The app communicates with a backend server for:
+- User authentication
+- Image processing
 - Video generation
-- Status polling
-- Video playback
-- History display
+
+Make sure the backend server is running and accessible at the URL specified in your `.env` file.
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## License
 
-MIT 
+This project is licensed under the MIT License - see the LICENSE file for details. 
