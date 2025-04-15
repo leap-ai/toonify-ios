@@ -2,6 +2,7 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 import { View, Text } from 'react-native';
+import { API_URL } from '@env';
 
 const AuthContext = createContext({});
 
@@ -63,7 +64,7 @@ export const AuthProvider = ({ children }) => {
 
   const signIn = async (email, password) => {
     try {
-      const response = await axios.post('http://localhost:3000/auth/signin', {
+      const response = await axios.post(`${API_URL}/auth/login`, {
         email,
         password
       });
@@ -80,7 +81,7 @@ export const AuthProvider = ({ children }) => {
 
   const signUp = async (email, password, name) => {
     try {
-      const response = await axios.post('http://localhost:3000/auth/signup', {
+      const response = await axios.post(`${API_URL}/auth/signup`, {
         email,
         password,
         name
@@ -109,7 +110,7 @@ export const AuthProvider = ({ children }) => {
 
   const handleGoogleSignIn = async (token) => {
     try {
-      const response = await axios.post('http://localhost:3000/auth/google', { token });
+      const response = await axios.post(`${API_URL}/auth/google`, { token });
       const { token: jwtToken, user } = response.data;
       await SecureStore.setItemAsync('userToken', jwtToken);
       await SecureStore.setItemAsync('userData', JSON.stringify(user));
@@ -123,7 +124,7 @@ export const AuthProvider = ({ children }) => {
 
   const handleAppleSignIn = async (identityToken) => {
     try {
-      const response = await axios.post('http://localhost:3000/auth/apple', { identityToken });
+      const response = await axios.post(`${API_URL}/auth/apple`, { identityToken });
       const { token: jwtToken, user } = response.data;
       await SecureStore.setItemAsync('userToken', jwtToken);
       await SecureStore.setItemAsync('userData', JSON.stringify(user));

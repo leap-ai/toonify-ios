@@ -22,6 +22,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AuthProvider, useAuth } from './auth/AuthContext';
 import SignInScreen from './auth/SignInScreen';
 import SignUpScreen from './auth/SignUpScreen';
+import { API_URL } from '@env';
 
 const Stack = createNativeStackNavigator();
 
@@ -73,9 +74,6 @@ function HomeScreen() {
     </View>
   );
 }
-
-// Replace with your computer's IP address on the local network
-const API_BASE = 'http://10.43.2.205:3000';
 
 export default function App() {
   const [image, setImage] = useState(null);
@@ -133,7 +131,7 @@ export default function App() {
     try {
       setIsLoading(true);
       setError(null);
-      const res = await axios.post(`${API_BASE}/auth/login`, { username: 'demo' });
+      const res = await axios.post(`${API_URL}/auth/login`, { username: 'demo' });
       await SecureStore.setItemAsync('token', res.data.token);
       setIsLoggedIn(true);
       fetchHistory();
@@ -163,7 +161,7 @@ export default function App() {
       }
       
       const res = await axios.post(
-        `${API_BASE}/generation/generate`,
+        `${API_URL}/generation/generate`,
         { imageBase64: image.base64 },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -188,7 +186,7 @@ export default function App() {
           attempts++;
           console.log(`Polling attempt ${attempts} for generation ${id}`);
           
-          const res = await axios.get(`${API_BASE}/generation/check-status/${id}`, {
+          const res = await axios.get(`${API_URL}/generation/check-status/${id}`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           
@@ -235,7 +233,7 @@ export default function App() {
       const token = await SecureStore.getItemAsync('token');
       if (!token) return;
       
-      const res = await axios.get(`${API_BASE}/generation/history`, {
+      const res = await axios.get(`${API_URL}/generation/history`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setHistory(res.data);
