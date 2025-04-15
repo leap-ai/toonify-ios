@@ -1,10 +1,10 @@
 # Toonify Mobile App
 
-A React Native mobile application that transforms images into animated videos using AI technology. Built with Expo and React Native.
+A React Native mobile application that transforms images into cartoons using AI technology. Built with Expo and React Native.
 
 ## Features
 
-- **Image to Video Conversion**: Upload images and convert them into animated videos
+- **Image to Video Conversion**: Upload images and convert them into cartoons.
 - **User Authentication**: 
   - Email/Password login
   - Google Sign-In
