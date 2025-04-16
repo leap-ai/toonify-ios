@@ -1,6 +1,6 @@
 # Toonify Mobile App
 
-A React Native mobile application that transforms images into cartoons using AI technology. Built with Expo and React Native.
+A React Native mobile application that transforms images into cartoons using AI technology. Built with Expo, React Native, and TypeScript.
 
 ## Features
 
@@ -11,6 +11,7 @@ A React Native mobile application that transforms images into cartoons using AI 
   - Apple Sign-In
 - **Secure Storage**: Securely store user credentials and tokens
 - **Cross-Platform**: Works on both iOS and Android devices
+- **TypeScript**: Fully typed codebase for better developer experience and code quality
 
 ## Prerequisites
 
@@ -60,12 +61,25 @@ expo build:ios
 
 ## Project Structure
 
-- `App.js` - Main application component
-- `auth/` - Authentication related components and context
-  - `AuthContext.js` - Authentication state management
-  - `SignInScreen.js` - Sign in screen
-  - `SignUpScreen.js` - Sign up screen
+- `src/` - Source code directory
+  - `App.tsx` - Main application component
+  - `auth/` - Authentication related components and context
+    - `AuthContext.tsx` - Authentication state management
+    - `SignInScreen.tsx` - Sign in screen
+    - `SignUpScreen.tsx` - Sign up screen
+    - `types.ts` - TypeScript type definitions
+  - `types/` - Global type definitions
+    - `env.d.ts` - Environment variable type declarations
 - `assets/` - Images, fonts, and other static assets
+
+## TypeScript
+
+This project uses TypeScript for type safety and better developer experience:
+
+- **Type Definitions**: All components, functions, and data structures are properly typed
+- **Interface Definitions**: Clear interfaces for props, state, and API responses
+- **Type Checking**: Catch errors at compile time rather than runtime
+- **Better IDE Support**: Enhanced autocomplete and inline documentation
 
 ## Authentication Flow
 

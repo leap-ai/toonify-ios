@@ -1,11 +1,14 @@
 {
   "expo": {
-    "name": "Image to Video Generator",
-    "slug": "image-to-video-mobile",
+    "name": "Toonify",
+    "slug": "toonify",
+    "owner": "leapai",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "platforms": ["ios"],
+    "scheme": "toonify",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -15,13 +18,17 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.leapai.toonify"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -34,6 +41,11 @@
         }
       ]
     ],
-    "sdkVersion": "52.0.0"
+    "sdkVersion": "52.0.0",
+    "extra": {
+      "eas": {
+        "projectId": "1a400000-c128-4cde-b7d3-09ebe2e44450"
+      }
+    }
   }
-} 
+}

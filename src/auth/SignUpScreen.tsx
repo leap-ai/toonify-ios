@@ -9,16 +9,24 @@ import {
   ActivityIndicator
 } from 'react-native';
 import { useAuth } from './AuthContext';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from './SignInScreen';
 
-export default function SignUpScreen({ navigation }) {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+type SignUpScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'SignUp'>;
+
+interface SignUpScreenProps {
+  navigation: SignUpScreenNavigationProp;
+}
+
+const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
+  const [name, setName] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [confirmPassword, setConfirmPassword] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
   const { signUp } = useAuth();
 
-  const handleSignUp = async () => {
+  const handleSignUp = async (): Promise<void> => {
     if (!name || !email || !password || !confirmPassword) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
@@ -37,8 +45,8 @@ export default function SignUpScreen({ navigation }) {
     setLoading(true);
     try {
       await signUp(email, password, name);
-    } catch (error) {
-      Alert.alert('Error', error.message);
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'An error occurred during sign up');
     } finally {
       setLoading(false);
     }
@@ -101,13 +109,13 @@ export default function SignUpScreen({ navigation }) {
       </TouchableOpacity>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
     justifyContent: 'center',
+    padding: 20,
     backgroundColor: '#fff',
   },
   title: {
@@ -126,8 +134,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   button: {
-    height: 50,
     backgroundColor: '#007AFF',
+    height: 50,
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
@@ -136,14 +144,16 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: 'bold',
   },
   linkButton: {
     marginTop: 15,
+    alignItems: 'center',
   },
   linkText: {
     color: '#007AFF',
     fontSize: 16,
-    textAlign: 'center',
   },
-}); 
+});
+
+export default SignUpScreen; 

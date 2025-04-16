@@ -3,20 +3,27 @@ import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 import { View, Text } from 'react-native';
 import { API_URL } from '@env';
+import { 
+  AuthContextType, 
+  User, 
+  AuthProviderProps, 
+  ErrorBoundaryProps, 
+  ErrorBoundaryState 
+} from './types';
 
-const AuthContext = createContext({});
+const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
-class ErrorBoundary extends React.Component {
-  constructor(props) {
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null, errorInfo: null };
   }
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError(error: Error): { hasError: boolean } {
     return { hasError: true };
   }
 
-  componentDidCatch(error, errorInfo) {
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
     this.setState({
       error: error,
       errorInfo: errorInfo
@@ -25,7 +32,7 @@ class ErrorBoundary extends React.Component {
     console.error('Error caught by boundary:', error, errorInfo);
   }
 
-  render() {
+  render(): React.ReactNode {
     if (this.state.hasError) {
       return (
         <View style={{ padding: 20 }}>
@@ -39,20 +46,21 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     loadStoredUser();
   }, []);
 
-  const loadStoredUser = async () => {
+  const loadStoredUser = async (): Promise<void> => {
     try {
       const token = await SecureStore.getItemAsync('userToken');
       const userData = await SecureStore.getItemAsync('userData');
       if (token && userData) {
-        setUser(JSON.parse(userData));
+        const parsedUser = JSON.parse(userData) as User;
+        setUser(parsedUser);
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       }
     } catch (error) {
@@ -62,7 +70,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const signIn = async (email, password) => {
+  const signIn = async (email: string, password: string): Promise<User> => {
     try {
       const response = await axios.post(`${API_URL}/auth/login`, {
         email,
@@ -74,12 +82,12 @@ export const AuthProvider = ({ children }) => {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(user);
       return user;
-    } catch (error) {
+    } catch (error: any) {
       throw error.response?.data?.error || 'An error occurred during sign in';
     }
   };
 
-  const signUp = async (email, password, name) => {
+  const signUp = async (email: string, password: string, name: string): Promise<User> => {
     try {
       const response = await axios.post(`${API_URL}/auth/signup`, {
         email,
@@ -92,12 +100,12 @@ export const AuthProvider = ({ children }) => {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(user);
       return user;
-    } catch (error) {
+    } catch (error: any) {
       throw error.response?.data?.error || 'An error occurred during sign up';
     }
   };
 
-  const signOut = async () => {
+  const signOut = async (): Promise<void> => {
     try {
       await SecureStore.deleteItemAsync('userToken');
       await SecureStore.deleteItemAsync('userData');
@@ -108,21 +116,23 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const handleGoogleSignIn = async (token) => {
+  const handleGoogleSignIn = async (idToken: string): Promise<User> => {
     try {
-      const response = await axios.post(`${API_URL}/auth/google`, { token });
-      const { token: jwtToken, user } = response.data;
-      await SecureStore.setItemAsync('userToken', jwtToken);
+      const response = await axios.post(`${API_URL}/auth/google`, {
+        id_token: idToken
+      });
+      const { token, user } = response.data;
+      await SecureStore.setItemAsync('userToken', token);
       await SecureStore.setItemAsync('userData', JSON.stringify(user));
-      axios.defaults.headers.common['Authorization'] = `Bearer ${jwtToken}`;
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(user);
       return user;
-    } catch (error) {
+    } catch (error: any) {
       throw error.response?.data?.error || 'An error occurred during Google sign in';
     }
   };
 
-  const handleAppleSignIn = async (identityToken) => {
+  const handleAppleSignIn = async (identityToken: string): Promise<User> => {
     try {
       const response = await axios.post(`${API_URL}/auth/apple`, { identityToken });
       const { token: jwtToken, user } = response.data;
@@ -131,7 +141,7 @@ export const AuthProvider = ({ children }) => {
       axios.defaults.headers.common['Authorization'] = `Bearer ${jwtToken}`;
       setUser(user);
       return user;
-    } catch (error) {
+    } catch (error: any) {
       throw error.response?.data?.error || 'An error occurred during Apple sign in';
     }
   };
@@ -155,7 +165,7 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-export const useAuth = () => {
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
