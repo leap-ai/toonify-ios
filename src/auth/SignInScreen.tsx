@@ -17,7 +17,7 @@ import * as Google from 'expo-auth-session/providers/google';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { makeRedirectUri } from 'expo-auth-session';
 import { useAuth } from './AuthContext';
-import { GOOGLE_CLIENT_ID_IOS, GOOGLE_CLIENT_ID_EXPO_WEB } from '@env';
+import { config } from '../config';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Constants from 'expo-constants';
 
@@ -43,20 +43,10 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
   const [isAppleAuthAvailable, setIsAppleAuthAvailable] = useState(false);
   const { signIn, handleGoogleSignIn, handleAppleSignIn } = useAuth();
 
-  useEffect(() => {
-    console.log('🔍 redirectUri:', makeRedirectUri({ useProxy: true }));
-    console.log('🧾 Web Client ID:', GOOGLE_CLIENT_ID_EXPO_WEB);
-  }, []);
-
   const redirectUri = makeRedirectUri({
     native: 'com.leapai.toonify:/oauthredirect',
     useProxy: true,
   });
-
-  // Debug the actual redirect URI being used
-  useEffect(() => {
-    console.log('🔗 Redirect URI:', redirectUri);
-  }, [redirectUri]);
 
   const [request, response, promptAsync] = Google.useAuthRequest({
     clientId: Constants.expoConfig?.extra?.googleClientId,

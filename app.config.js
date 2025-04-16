@@ -29,12 +29,14 @@ export default {
     apiUrl: process.env.API_URL,
     googleClientId: process.env.GOOGLE_CLIENT_ID,
     googleExpoClientId: process.env.GOOGLE_EXPO_CLIENT_ID,
+    appleClientId: process.env.APPLE_CLIENT_ID,
+    betterAuthBaseUrl: process.env.BETTER_AUTH_BASE_URL,
     eas: {
       projectId: process.env.EAS_PROJECT_ID
     }
   },
   plugins: [
-    'expo-apple-authentication',
-    'expo-auth-session'
+    'expo-auth-session',
+    'expo-apple-authentication'
   ]
 }; 

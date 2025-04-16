@@ -11,8 +11,8 @@ export const config = {
   apple: {
     clientId: Constants.expoConfig?.extra?.appleClientId,
   },
-  revenuecat: {
-    apiKey: Constants.expoConfig?.extra?.revenuecatApiKey,
+  betterAuth: {
+    baseUrl: Constants.expoConfig?.extra?.betterAuthBaseUrl || 'http://localhost:3000',
   },
 } as const;
 
@@ -22,7 +22,6 @@ const requiredEnvVars = [
   'EXPO_PUBLIC_GOOGLE_CLIENT_ID',
   'EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID',
   'EXPO_PUBLIC_APPLE_CLIENT_ID',
-  'EXPO_PUBLIC_REVENUECAT_API_KEY',
 ] as const;
 
 for (const envVar of requiredEnvVars) {
