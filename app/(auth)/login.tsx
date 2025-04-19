@@ -1,19 +1,55 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
-import { Link } from 'expo-router';
-import { useAuthStore } from '../../stores/auth';
+import React, { useRef, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator, Alert } from 'react-native';
+import { Link, router } from 'expo-router';
+import { authClient } from '../../stores/auth';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { signInWithGoogle, signInWithApple, signInWithEmail, isLoading, error } = useAuthStore();
+  const [isLoading, setIsLoading] = useState(false);
+  const errorRef = useRef<string | null>(null);
 
   const handleEmailLogin = async () => {
-    await signInWithEmail(email, password);
+    await authClient.signIn.email({
+      email,
+      password,
+    }, {
+      onRequest: () => {
+        setIsLoading(true);
+      },
+      onError: (ctx) => {
+        setIsLoading(false);
+        errorRef.current = ctx.error.message!!;
+      },
+      onSuccess: () => {
+        setIsLoading(false);
+        // Use requestAnimationFrame for smooth transition
+        requestAnimationFrame(() => {
+          router.replace('/(tabs)');
+        });
+      }
+    })
   };
 
+  const signInWithApple = async () => {
+    await authClient.signIn.social({
+        provider: "apple",
+    }, {
+      onError: (ctx) => {
+        errorRef.current = ctx.error.message!!;
+      },
+      onSuccess: () => {
+        // Use requestAnimationFrame for smooth transition
+        requestAnimationFrame(() => {
+          router.replace('/(tabs)');
+        });
+      }
+    })
+  }
+
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <Text style={styles.title}>Welcome to Toonify</Text>
         <Text style={styles.subtitle}>Sign in to start creating cartoons</Text>
@@ -40,15 +76,14 @@ export default function LoginScreen() {
           <TouchableOpacity
             style={styles.loginButton}
             onPress={handleEmailLogin}
-            disabled={isLoading}
           >
-            {isLoading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.buttonText}>Sign In</Text>
-            )}
+            <Text style={styles.buttonText}>Sign In</Text>
           </TouchableOpacity>
         </View>
+
+        {errorRef.current && (
+          <Text style={styles.errorText}>{errorRef.current}</Text>
+        )}
 
         <View style={styles.divider}>
           <View style={styles.line} />
@@ -57,18 +92,17 @@ export default function LoginScreen() {
         </View>
 
         <View style={styles.socialButtons}>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={[styles.socialButton, styles.googleButton]}
             onPress={signInWithGoogle}
             disabled={isLoading}
           >
             <Text style={styles.buttonText}>Continue with Google</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           <TouchableOpacity
             style={[styles.socialButton, styles.appleButton]}
             onPress={signInWithApple}
-            disabled={isLoading}
           >
             <Text style={styles.buttonText}>Continue with Apple</Text>
           </TouchableOpacity>
@@ -83,7 +117,7 @@ export default function LoginScreen() {
           </Link>
         </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -160,6 +194,11 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  errorText: {
+    color: '#ff3b30',
+    textAlign: 'center',
+    marginBottom: 15,
   },
   footer: {
     flexDirection: 'row',

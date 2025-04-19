@@ -1,10 +1,10 @@
 import { Redirect } from 'expo-router';
-import { useAuthStore } from '../stores/auth';
+import { authClient } from '../stores/auth';
 
 export default function Index() {
-  const { isAuthenticated } = useAuthStore();
+  const { data: session } = authClient.useSession();
   
-  if (isAuthenticated) {
+  if (session?.user?.id) {
     return <Redirect href="/(tabs)" />;
   }
   

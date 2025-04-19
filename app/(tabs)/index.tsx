@@ -1,24 +1,32 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useGenerationStore } from '../../stores/generation';
 
 export default function GenerateScreen() {
   const router = useRouter();
-  const { generateImage, isLoading } = useGenerationStore();
+  const { generateImage, isLoading, error } = useGenerationStore();
+  const [localError, setLocalError] = useState<string | null>(null);
 
   const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
+    try {
+      setLocalError(null);
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 1,
+      });
 
-    if (!result.canceled) {
-      await generateImage(result.assets[0].uri);
-      router.push('/(tabs)/history');
+      if (!result.canceled) {
+        await generateImage(result.assets[0].uri);
+        router.push('/(tabs)/history');
+      }
+    } catch (err) {
+      console.error('Error picking image:', err);
+      setLocalError('Failed to pick image. Please try again.');
+      Alert.alert('Error', 'Failed to pick image. Please try again.');
     }
   };
 
@@ -37,6 +45,10 @@ export default function GenerateScreen() {
             {isLoading ? 'Processing...' : 'Upload Photo'}
           </Text>
         </TouchableOpacity>
+        
+        {(error || localError) && (
+          <Text style={styles.errorText}>{error || localError}</Text>
+        )}
       </View>
     </View>
   );
@@ -76,5 +88,10 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  errorText: {
+    color: '#ff3b30',
+    marginTop: 20,
+    textAlign: 'center',
   },
 });

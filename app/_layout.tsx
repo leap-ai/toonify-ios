@@ -1,22 +1,38 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useAuthStore } from '../stores/auth';
+import { authClient } from '../stores/auth';
+import { View, ActivityIndicator } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { TransitionLayout } from '@/components/TransitionLayout';
 
 export default function RootLayout() {
-  const { isAuthenticated } = useAuthStore();
+  const {
+    data: session,
+    isPending, //loading state
+} = authClient.useSession()
+
+  if (isPending) {
+    return (
+      <SafeAreaProvider>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color="#0000ff" />
+        </View>
+      </SafeAreaProvider>
+    );
+  }
 
   return (
-    <>
+    <TransitionLayout>
       <Stack screenOptions={{ headerShown: false }}>
-        {!isAuthenticated ? (
-          <Stack.Screen name="(auth)" />
+        {session?.user?.id ? (
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         ) : (
-          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="(auth)/login" options={{ headerShown: false }} />
         )}
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />
-    </>
+    </TransitionLayout>
   );
 }

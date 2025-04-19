@@ -1,82 +1,246 @@
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
-import { useState } from 'react';
-import { LogOut } from 'lucide-react-native';
-import { useAuthStore } from '@/stores/auth';
+import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, Alert, Modal, ActivityIndicator, Animated } from 'react-native';
+import { useState, useEffect } from 'react';
+import { LogOut, X, ChevronRight, Shield } from 'lucide-react-native';
+import { authClient } from "../../stores/auth";
+import { useGenerationStore, Generation } from '@/stores/generation';
+import { useCredits } from '@/hooks/useCredits';
 import { router } from 'expo-router';
 
-// Dummy user data
-const DUMMY_USER = {
-  name: "John Doe",
-  email: "john@example.com",
-  joinedDate: "2024-01-01"
-};
-
-const DUMMY_GENERATIONS = [
-  {
-    id: '1',
-    created_at: '2024-04-15T10:00:00Z',
-    original_image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80',
-    cartoon_image: 'https://v3.fal.media/files/kangaroo/BBaHWx09TiVHI7-uo6yI8_27a0c5437b7d4cd19ac0540d90092ead.png'
-  },
-  {
-    id: '2',
-    created_at: '2024-04-14T15:30:00Z',
-    original_image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e',
-    cartoon_image: 'https://v3.fal.media/files/kangaroo/BBaHWx09TiVHI7-uo6yI8_27a0c5437b7d4cd19ac0540d90092ead.png'
-  }
-];
-
-interface Generation {
-  id: string;
-  created_at: string;
-  original_image: string;
-  cartoon_image: string;
+interface CreditTransaction {
+  id: number;
+  userId: number;
+  amount: number;
+  type: string;
+  createdAt: string;
 }
 
-export default function ProfileScreen() {
-  const [generations] = useState<Generation[]>(DUMMY_GENERATIONS);
-  const { signOut } = useAuthStore();
+const GenerationItem = ({ item }: { item: Generation }) => {
+  const [originalImageLoaded, setOriginalImageLoaded] = useState(false);
+  const [cartoonImageLoaded, setCartoonImageLoaded] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const fadeAnim = new Animated.Value(0);
 
-  const handleLogout = () => {
-    signOut();
-    router.replace('/(auth)/login');
+  useEffect(() => {
+    if (originalImageLoaded && cartoonImageLoaded) {
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [originalImageLoaded, cartoonImageLoaded]);
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+    const diffMinutes = Math.floor(diffTime / (1000 * 60));
+
+    if (diffDays === 0) {
+      if (diffHours === 0) {
+        return `${diffMinutes} minutes ago`;
+      }
+      return `${diffHours} hours ago`;
+    } else if (diffDays === 1) {
+      return 'Yesterday';
+    } else if (diffDays < 7) {
+      return `${diffDays} days ago`;
+    } else {
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+    }
   };
 
-  const renderGenerationItem = ({ item }: { item: Generation }) => (
-    <View style={styles.generationItem}>
-      <Text style={styles.dateText}>
-        {new Date(item.created_at).toLocaleDateString()}
-      </Text>
-      <View style={styles.imagesContainer}>
-        <Image source={{ uri: item.original_image }} style={styles.thumbnail} />
-        <Image source={{ uri: item.cartoon_image }} style={styles.thumbnail} />
+  return (
+    <TouchableOpacity 
+      style={styles.generationItem}
+      onPress={() => router.push('/history')}
+    >
+      <View style={styles.generationImages}>
+        <View style={styles.imageWrapper}>
+          {!originalImageLoaded && (
+            <View style={styles.loaderContainer}>
+              <ActivityIndicator size="small" color="#007AFF" />
+            </View>
+          )}
+          <Animated.View style={{ opacity: fadeAnim }}>
+            <Image 
+              source={{ uri: item.originalImageUrl }} 
+              style={styles.thumbnail}
+              onLoad={() => setOriginalImageLoaded(true)}
+            />
+          </Animated.View>
+        </View>
+        <View style={styles.imageWrapper}>
+          {!cartoonImageLoaded && (
+            <View style={styles.loaderContainer}>
+              <ActivityIndicator size="small" color="#007AFF" />
+            </View>
+          )}
+          <Animated.View style={{ opacity: fadeAnim }}>
+            <Image 
+              source={{ uri: item.cartoonImageUrl }} 
+              style={styles.thumbnail}
+              onLoad={() => setCartoonImageLoaded(true)}
+            />
+          </Animated.View>
+        </View>
       </View>
+      <Text style={styles.dateText}>
+        {formatDate(item.createdAt)}
+      </Text>
+
+      <Modal
+        visible={!!selectedImage}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setSelectedImage(null)}
+      >
+        <View style={styles.modalContainer}>
+          <TouchableOpacity 
+            style={styles.closeButton}
+            onPress={() => setSelectedImage(null)}
+          >
+            <X size={24} color="#fff" />
+          </TouchableOpacity>
+          <Image 
+            source={{ uri: selectedImage || '' }} 
+            style={styles.fullScreenImage}
+            resizeMode="contain"
+          />
+        </View>
+      </Modal>
+    </TouchableOpacity>
+  );
+};
+
+const CreditItem = ({ item }: { item: CreditTransaction }) => {
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  };
+
+  return (
+    <View style={styles.creditItem}>
+      <View style={styles.creditInfo}>
+        <Text style={styles.creditType}>{item.type}</Text>
+        <Text style={styles.creditAmount}>
+          {item.amount > 0 ? '+' : ''}{item.amount} credits
+        </Text>
+      </View>
+      <Text style={styles.creditDate}>
+        {formatDate(item.createdAt)}
+      </Text>
     </View>
   );
+};
+
+const InfoItem = ({ title, value, onPress }: { title: string; value?: string; onPress?: () => void }) => (
+  <TouchableOpacity 
+    style={styles.infoItem} 
+    onPress={onPress}
+    disabled={!onPress}
+  >
+    <Text style={styles.infoTitle}>{title}</Text>
+    <View style={styles.infoValueContainer}>
+      {value && <Text style={styles.infoValue}>{value}</Text>}
+      {onPress && <ChevronRight size={20} color="#666" />}
+    </View>
+  </TouchableOpacity>
+);
+
+export default function ProfileScreen() {
+  const { data: session } = authClient.useSession();
+
+  const { generations, isLoading, error, fetchGenerations } = useGenerationStore();
+  const { history: creditHistory, isLoading: isCreditsLoading, creditsBalance } = useCredits();
+
+  useEffect(() => {
+    if (session?.user.id) {
+      fetchGenerations();
+    }
+  }, [session?.user?.id]);
+
+  const handleLogout = async () => {
+    try {
+      await authClient.signOut();
+      router.replace('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+      Alert.alert('Error', 'Failed to log out. Please try again.');
+    }
+  };
+
+  const recentGenerations = generations.slice(0, 3);
 
   return (
     <View style={styles.container}>
       <View style={styles.userInfoContainer}>
         <View style={styles.userHeader}>
           <View>
-            <Text style={styles.userName}>{DUMMY_USER.name}</Text>
-            <Text style={styles.userEmail}>{DUMMY_USER.email}</Text>
-            <Text style={styles.joinDate}>Joined: {new Date(DUMMY_USER.joinedDate).toLocaleDateString()}</Text>
+            <Text style={styles.userName}>{session?.user?.name}</Text>
+            <Text style={styles.userEmail}>{session?.user?.email}</Text>
           </View>
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <LogOut size={24} color="#fff" />
             <Text style={styles.logoutText}>Logout</Text>
           </TouchableOpacity>
         </View>
+
+        <View style={styles.infoSection}>
+          <InfoItem title="Available Credits" value={`${creditsBalance} credits`} />
+          <InfoItem title="Total Generations" value={generations.length.toString()} />
+          <InfoItem 
+            title="Privacy Policy" 
+            onPress={() => router.push('/privacy-policy')}
+          />
+        </View>
       </View>
 
-      <Text style={styles.title}>Generation History</Text>
-      <FlatList
-        data={generations}
-        renderItem={renderGenerationItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-      />
+      <View style={styles.section}>
+        <Text style={styles.title}>Recent Generations</Text>
+        {error && <Text style={styles.errorText}>{error}</Text>}
+        <FlatList
+          data={recentGenerations}
+          renderItem={({ item }) => <GenerationItem item={item} />}
+          keyExtractor={(item) => item.id.toString()}
+          scrollEnabled={false}
+        />
+        {generations.length > 5 && (
+          <TouchableOpacity 
+            style={styles.showMoreButton}
+            onPress={() => router.push('/history')}
+          >
+            <Text style={styles.showMoreText}>Show More</Text>
+            <ChevronRight size={20} color="#007AFF" />
+          </TouchableOpacity>
+        )}
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.title}>Credit Transactions</Text>
+        {isCreditsLoading ? (
+          <ActivityIndicator size="small" color="#007AFF" />
+        ) : creditHistory.length === 0 ? (
+          <Text style={styles.emptyText}>No credit transactions yet</Text>
+        ) : (
+          <FlatList
+            data={creditHistory}
+            renderItem={({ item }) => <CreditItem item={item} />}
+            keyExtractor={(item) => item.id.toString()}
+            scrollEnabled={false}
+          />
+        )}
+      </View>
     </View>
   );
 }
@@ -97,6 +261,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+    marginBottom: 20,
   },
   userName: {
     fontSize: 24,
@@ -107,10 +272,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     marginBottom: 5,
-  },
-  joinDate: {
-    fontSize: 14,
-    color: '#888',
   },
   logoutButton: {
     backgroundColor: '#dc2626',
@@ -125,33 +286,137 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  infoSection: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 15,
+  },
+  infoItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  infoTitle: {
+    fontSize: 16,
+    color: '#333',
+  },
+  infoValueContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  infoValue: {
+    fontSize: 16,
+    color: '#666',
+  },
+  section: {
+    marginBottom: 20,
+  },
   title: {
     fontSize: 20,
     fontWeight: '600',
-    marginBottom: 20,
+    marginBottom: 15,
+  },
+  errorText: {
+    color: '#dc2626',
+    marginBottom: 10,
   },
   generationItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#f8f8f8',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 15,
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  generationImages: {
+    flexDirection: 'row',
+    gap: 8,
+    marginRight: 10,
+  },
+  imageWrapper: {
+    width: 40,
+    height: 40,
+    borderRadius: 4,
+    backgroundColor: '#eee',
+    overflow: 'hidden',
+  },
+  thumbnail: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 4,
+  },
+  loaderContainer: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#eee',
   },
   dateText: {
     fontSize: 14,
     color: '#666',
-    marginBottom: 10,
+    marginLeft: 'auto',
   },
-  imagesContainer: {
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 60,
+    right: 20,
+    padding: 10,
+  },
+  fullScreenImage: {
+    width: '100%',
+    height: '80%',
+  },
+  creditItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
-  thumbnail: {
-    width: '48%',
-    height: 150,
-    borderRadius: 8,
-    backgroundColor: '#eee',
+  creditInfo: {
+    flex: 1,
   },
-  listContent: {
-    paddingBottom: 20,
+  creditType: {
+    fontSize: 16,
+    fontWeight: '600',
+    textTransform: 'capitalize',
+  },
+  creditAmount: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
+  },
+  creditDate: {
+    fontSize: 14,
+    color: '#666',
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  showMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 10,
+    gap: 8,
+  },
+  showMoreText: {
+    color: '#007AFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
