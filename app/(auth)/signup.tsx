@@ -27,10 +27,6 @@ export default function SignupScreen() {
       },
       onSuccess: () => {
         setIsLoading(false);
-        // Use requestAnimationFrame for smooth transition
-        requestAnimationFrame(() => {
-          router.replace('/(tabs)');
-        });
       }
     })
   };

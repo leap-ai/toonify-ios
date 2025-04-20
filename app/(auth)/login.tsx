@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator, Alert } from 'react-native';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { Link, router } from 'expo-router';
 import { authClient } from '../../stores/auth';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -24,29 +25,69 @@ export default function LoginScreen() {
       },
       onSuccess: () => {
         setIsLoading(false);
-        // Use requestAnimationFrame for smooth transition
-        requestAnimationFrame(() => {
-          router.replace('/(tabs)');
-        });
       }
     })
   };
 
   const signInWithApple = async () => {
-    await authClient.signIn.social({
-        provider: "apple",
-    }, {
-      onError: (ctx) => {
-        errorRef.current = ctx.error.message!!;
-      },
-      onSuccess: () => {
-        // Use requestAnimationFrame for smooth transition
-        requestAnimationFrame(() => {
-          router.replace('/(tabs)');
+    try {
+      // const credential = await AppleAuthentication.signInAsync({
+      //   requestedScopes: [
+      //     AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+      //     AppleAuthentication.AppleAuthenticationScope.EMAIL,
+      //   ],
+      // });
+
+      // if (credential.identityToken) {
+        await authClient.signIn.social({
+          provider: "apple",
+          // idToken: {
+          //   token: credential.identityToken
+          // }
+        }, {
+          onRequest: () => {
+            console.log("Trying signed in with Apple");
+            setIsLoading(true);
+          },
+          onError: (ctx) => {
+            console.log("Failed signed in with Apple");
+            setIsLoading(false);
+            errorRef.current = ctx.error.message!!;
+          },
+          onSuccess: () => {
+            setIsLoading(false);
+            console.log("Successfully signed in with Apple");
+            // router.push("/(tabs)")
+          }
         });
+      // } else {
+      //   errorRef.current = "No identity token";
+      // }
+    } catch (error: any) {
+      if (error.code === 'ERR_REQUEST_CANCELED') {
+        Alert.alert("Apple Sign In Cancelled", "Please try again");
+      } else {
+        throw new Error(error);
       }
-    })
+    }
   }
+
+    
+  //   await authClient.signIn.social({
+  //       provider: "apple",
+  //   }, {
+  //     onRequest: () => {
+  //       setIsLoading(true);
+  //     },
+  //     onError: (ctx) => {
+  //       setIsLoading(false);
+  //       errorRef.current = ctx.error.message!!;
+  //     },
+  //     onSuccess: () => {
+  //       setIsLoading(false);
+  //     }
+  //   })
+  // }
 
   return (
     <SafeAreaView style={styles.container}>
