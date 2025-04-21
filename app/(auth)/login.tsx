@@ -31,19 +31,19 @@ export default function LoginScreen() {
 
   const signInWithApple = async () => {
     try {
-      const credential = await AppleAuthentication.signInAsync({
-        requestedScopes: [
-          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-          AppleAuthentication.AppleAuthenticationScope.EMAIL,
-        ],
-      });
+      // const credential = await AppleAuthentication.signInAsync({
+      //   requestedScopes: [
+      //     AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+      //     AppleAuthentication.AppleAuthenticationScope.EMAIL,
+      //   ],
+      // });
 
-      if (credential.identityToken) {
+      // if (credential.identityToken) {
         await authClient.signIn.social({
           provider: "apple",
-          idToken: {
-            token: credential.identityToken
-          }
+          // idToken: {
+          //   token: credential.identityToken
+          // }
         }, {
           onRequest: () => {
             console.log("Trying signed in with Apple");
@@ -60,9 +60,9 @@ export default function LoginScreen() {
             // router.push("/(tabs)")
           }
         });
-      } else {
-        errorRef.current = "No identity token";
-      }
+      // } else {
+      //   errorRef.current = "No identity token";
+      // }
     } catch (error: any) {
       if (error.code === 'ERR_REQUEST_CANCELED') {
         Alert.alert("Apple Sign In Cancelled", "Please try again");
@@ -93,7 +93,6 @@ export default function LoginScreen() {
     try {
       await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/(tabs)",
       }, {
         onRequest: () => {
           console.log("Trying signed in with Google");

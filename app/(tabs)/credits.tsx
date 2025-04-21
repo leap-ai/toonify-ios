@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { useEffect, useState } from 'react';
 import Purchases, { PurchasesPackage } from 'react-native-purchases';
+import Paywall from '@/components/Paywall';
 
 // Dummy packages data
 const DUMMY_PACKAGES = [
@@ -28,61 +29,62 @@ const DUMMY_PACKAGES = [
 ];
 
 export default function CreditsScreen() {
-  const [packages, setPackages] = useState<PurchasesPackage[]>([]);
-  const [credits, setCredits] = useState(10); // Dummy initial credits
+  // const [packages, setPackages] = useState<PurchasesPackage[]>([]);
+  // const [credits, setCredits] = useState(10); // Dummy initial credits
 
-  useEffect(() => {
-    initializePurchases();
-  }, []);
+  // useEffect(() => {
+  //   initializePurchases();
+  // }, []);
 
-  const initializePurchases = async () => {
-    try {
-      // In production, this would be configured with your RevenueCat API key
-      setPackages(DUMMY_PACKAGES as unknown as PurchasesPackage[]);
-    } catch (error) {
-      console.error('Error initializing purchases:', error);
-    }
-  };
+  // const initializePurchases = async () => {
+  //   try {
+  //     // In production, this would be configured with your RevenueCat API key
+  //     setPackages(DUMMY_PACKAGES as unknown as PurchasesPackage[]);
+  //   } catch (error) {
+  //     console.error('Error initializing purchases:', error);
+  //   }
+  // };
 
-  const handlePurchase = async (pkg: PurchasesPackage) => {
-    try {
-      // In production, this would make an actual purchase through RevenueCat
-      // and send the transaction data to your backend
-      Alert.alert(
-        'Purchase Simulation',
-        'In production, this would process a real purchase through RevenueCat.',
-        [{ text: 'OK' }]
-      );
-    } catch (error) {
-      Alert.alert('Error', 'Failed to simulate purchase. Please try again.');
-    }
-  };
+  // const handlePurchase = async (pkg: PurchasesPackage) => {
+  //   try {
+  //     // In production, this would make an actual purchase through RevenueCat
+  //     // and send the transaction data to your backend
+  //     Alert.alert(
+  //       'Purchase Simulation',
+  //       'In production, this would process a real purchase through RevenueCat.',
+  //       [{ text: 'OK' }]
+  //     );
+  //   } catch (error) {
+  //     Alert.alert('Error', 'Failed to simulate purchase. Please try again.');
+  //   }
+  // };
 
-  return (
-    <View style={styles.container}>
-      <View style={styles.creditsCard}>
-        <Text style={styles.creditsTitle}>Your Credits</Text>
-        <Text style={styles.creditsCount}>{credits}</Text>
-      </View>
+  // return (
+  //   <View style={styles.container}>
+  //     <View style={styles.creditsCard}>
+  //       <Text style={styles.creditsTitle}>Your Credits</Text>
+  //       <Text style={styles.creditsCount}>{credits}</Text>
+  //     </View>
 
-      <Text style={styles.sectionTitle}>Buy Credits</Text>
-      {packages.map((pkg) => (
-        <TouchableOpacity
-          key={pkg.identifier}
-          style={styles.packageButton}
-          onPress={() => handlePurchase(pkg)}>
-          <Text style={styles.packageTitle}>{pkg.product.title}</Text>
-          <Text style={styles.packagePrice}>{pkg.product.priceString}</Text>
-        </TouchableOpacity>
-      ))}
+  //     <Text style={styles.sectionTitle}>Buy Credits</Text>
+  //     {packages.map((pkg) => (
+  //       <TouchableOpacity
+  //         key={pkg.identifier}
+  //         style={styles.packageButton}
+  //         onPress={() => handlePurchase(pkg)}>
+  //         <Text style={styles.packageTitle}>{pkg.product.title}</Text>
+  //         <Text style={styles.packagePrice}>{pkg.product.priceString}</Text>
+  //       </TouchableOpacity>
+  //     ))}
 
-      <TouchableOpacity
-        style={styles.privacyButton}
-        onPress={() => {/* Navigate to privacy policy */}}>
-        <Text style={styles.privacyButtonText}>Privacy Policy</Text>
-      </TouchableOpacity>
-    </View>
-  );
+  //     <TouchableOpacity
+  //       style={styles.privacyButton}
+  //       onPress={() => {/* Navigate to privacy policy */}}>
+  //       <Text style={styles.privacyButtonText}>Privacy Policy</Text>
+  //     </TouchableOpacity>
+  //   </View>
+  // );
+  return <Paywall />;
 }
 
 const styles = StyleSheet.create({
