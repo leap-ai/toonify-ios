@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { API_URL } from '../config';
 import { getAuthHeaders } from '@/utils';
+import { ProductMetadata, PurchaseCompletedEvent } from '@/types';
 
 interface CreditTransaction {
   id: number;
@@ -10,6 +11,34 @@ interface CreditTransaction {
   createdAt: string;
 }
 
+export interface StoreTransaction {
+  productIdentifier: string;
+  transactionIdentifier: string;
+  [key: string]: any;
+}
+
+export interface CustomerInfo {
+  [key: string]: any;
+}
+
+export interface PurchaseErrorEvent {
+  error: {
+    code: string;
+    message: string;
+  };
+}
+
+export interface RestoreCompletedEvent {
+  customerInfo: CustomerInfo;
+}
+
+export interface RestoreErrorEvent {
+  error: {
+    code: string;
+    message: string;
+  };
+}
+
 interface CreditsState {
   creditsBalance: number;
   history: CreditTransaction[];
@@ -17,10 +46,10 @@ interface CreditsState {
   error: string | null;
   fetchBalance: () => Promise<void>;
   fetchHistory: () => Promise<void>;
-  purchaseCredits: (amount: number) => Promise<void>;
+  purchaseCredits: (event: PurchaseCompletedEvent, productMetadata: ProductMetadata | null) => Promise<boolean>;
 }
 
-export const useCreditsStore = create<CreditsState>((set) => ({
+export const useCreditsStore = create<CreditsState>((set, get) => ({
   creditsBalance: 0,
   history: [],
   isLoading: false,
@@ -68,9 +97,32 @@ export const useCreditsStore = create<CreditsState>((set) => ({
     }
   },
 
-  purchaseCredits: async (amount: number) => {
+  purchaseCredits: async (event, productMetadata) => {
+    const { storeTransaction } = event;
+    
+    if (!storeTransaction?.productIdentifier) {
+      console.error('No product identifier found in transaction');
+      set({ error: 'No product identifier found in transaction' });
+      return false;
+    }
+
+    if (!productMetadata) {
+      console.error('No product metadata found for purchase');
+      set({ error: 'No product metadata found for purchase' });
+      return false;
+    }
+    
     try {
       set({ isLoading: true, error: null });
+      
+      const productId = storeTransaction.productIdentifier;
+      const creditAmount = productMetadata.price;
+      
+      if (creditAmount <= 0) {
+        console.error('Invalid credit amount from product metadata:', creditAmount);
+        throw new Error('Invalid credit amount from product metadata');
+      }
+      
       const headers = await getAuthHeaders();
       const response = await fetch(`${API_URL}/api/credits/purchase`, {
         method: 'POST',
@@ -78,22 +130,31 @@ export const useCreditsStore = create<CreditsState>((set) => ({
           ...headers,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ amount }),
+        body: JSON.stringify({ 
+          amount: creditAmount,
+          transactionId: storeTransaction.transactionIdentifier,
+          productId: productId,
+        }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to purchase credits');
+        const errorBody = await response.text();
+        console.error('Server error response:', errorBody);
+        throw new Error(`Failed to update credits on server: ${response.statusText}`);
       }
 
-      // Refresh balance and history after successful purchase
       await Promise.all([
-        useCreditsStore.getState().fetchBalance(),
-        useCreditsStore.getState().fetchHistory(),
+        get().fetchBalance(),
+        get().fetchHistory(),
       ]);
-    } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to purchase credits' });
-    } finally {
+      
       set({ isLoading: false });
+      return true;
+    } catch (error) {
+      console.error('Error processing purchase:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to process purchase';
+      set({ error: errorMessage, isLoading: false });
+      return false;
     }
   },
 })); 

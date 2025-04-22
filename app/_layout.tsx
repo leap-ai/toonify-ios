@@ -5,6 +5,7 @@ import { authClient } from '../stores/auth';
 import { View, ActivityIndicator } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { TransitionLayout } from '@/components/TransitionLayout';
+import { ProductMetadataProvider } from '@/context/ProductMetadataProvider';
 
 export default function RootLayout() {
   const {
@@ -23,16 +24,18 @@ export default function RootLayout() {
   }
 
   return (
-    <TransitionLayout>
-      <Stack screenOptions={{ headerShown: false }}>
-        {session?.user?.id ? (
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        ) : (
-          <Stack.Screen name="(auth)/login" options={{ headerShown: false }} />
-        )}
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </TransitionLayout>
+    <ProductMetadataProvider>
+      <TransitionLayout>
+        <Stack screenOptions={{ headerShown: false }}>
+          {session?.user?.id ? (
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          ) : (
+            <Stack.Screen name="(auth)/login" options={{ headerShown: false }} />
+          )}
+          <Stack.Screen name="+not-found" />
+        </Stack>
+        <StatusBar style="auto" />
+      </TransitionLayout>
+    </ProductMetadataProvider>
   );
 }
