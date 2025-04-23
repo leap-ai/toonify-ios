@@ -4,12 +4,27 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert } from 'reac
 import { Link, router } from 'expo-router';
 import { authClient } from '../../stores/auth';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Purchases from 'react-native-purchases';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const errorRef = useRef<string | null>(null);
+
+  const handleRevenueCatLogin = async (userId: string) => {
+    if (!userId) {
+      console.error('RevenueCat Login Error: No user ID provided.');
+      return;
+    }
+    try {
+      console.log(`Attempting RevenueCat login for user: ${userId}`);
+      const { customerInfo, created } = await Purchases.logIn(userId);
+      console.log(`RevenueCat login successful. Created: ${created}, UserID: ${customerInfo.originalAppUserId}`);
+    } catch (error) {
+      console.error('RevenueCat login failed:', error);
+    }
+  };
 
   const handleEmailLogin = async () => {
     await authClient.signIn.email({
@@ -18,94 +33,55 @@ export default function LoginScreen() {
     }, {
       onRequest: () => {
         setIsLoading(true);
+        errorRef.current = null;
       },
       onError: (ctx) => {
         setIsLoading(false);
         errorRef.current = ctx.error.message!!;
       },
-      onSuccess: () => {
-        setIsLoading(false);
+      onSuccess: async (ctx) => {
+        try {
+          console.log("Email auth success context:", ctx);
+          const userId = ctx?.data?.user?.id;
+          
+          if (userId) {
+            console.log("User authenticated with ID:", userId);
+            await handleRevenueCatLogin(userId);
+          } else {
+            console.warn("Could not extract user ID after successful email login");
+          }
+        } catch (error) {
+          console.error("Error during post-login processing:", error);
+        } finally {
+          setIsLoading(false);
+        }
       }
-    })
+    });
   };
 
   const signInWithApple = async () => {
     try {
-      // const credential = await AppleAuthentication.signInAsync({
-      //   requestedScopes: [
-      //     AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-      //     AppleAuthentication.AppleAuthenticationScope.EMAIL,
-      //   ],
-      // });
-
-      // if (credential.identityToken) {
-        await authClient.signIn.social({
-          provider: "apple",
-          // idToken: {
-          //   token: credential.identityToken
-          // }
-        }, {
-          onRequest: () => {
-            console.log("Trying signed in with Apple");
-            setIsLoading(true);
-          },
-          onError: (ctx) => {
-            console.log("Failed signed in with Apple");
-            setIsLoading(false);
-            errorRef.current = ctx.error.message!!;
-          },
-          onSuccess: () => {
-            setIsLoading(false);
-            console.log("Successfully signed in with Apple");
-            // router.push("/(tabs)")
-          }
-        });
-      // } else {
-      //   errorRef.current = "No identity token";
-      // }
-    } catch (error: any) {
-      if (error.code === 'ERR_REQUEST_CANCELED') {
-        Alert.alert("Apple Sign In Cancelled", "Please try again");
-      } else {
-        throw new Error(error);
-      }
-    }
-  }
-
-    
-  //   await authClient.signIn.social({
-  //       provider: "apple",
-  //   }, {
-  //     onRequest: () => {
-  //       setIsLoading(true);
-  //     },
-  //     onError: (ctx) => {
-  //       setIsLoading(false);
-  //       errorRef.current = ctx.error.message!!;
-  //     },
-  //     onSuccess: () => {
-  //       setIsLoading(false);
-  //     }
-  //   })
-  // }
-
-  const signInWithGoogle = async () => {
-    try {
       await authClient.signIn.social({
-        provider: "google",
+        provider: "apple",
       }, {
         onRequest: () => {
-          console.log("Trying signed in with Google");
+          console.log("Trying signed in with Apple");
           setIsLoading(true);
+          errorRef.current = null;
         },
         onError: (ctx) => {
-          console.log("Failed signed in with Google");
+          console.log("Failed signed in with Apple");
           setIsLoading(false);
           errorRef.current = ctx.error.message!!;
         },
-        onSuccess: () => {
-          setIsLoading(false);
-          console.log("Successfully signed in with Google");
+        onSuccess: async (ctx) => {
+          try {
+            console.log("Apple auth success context:", ctx);
+          } catch (error) {
+            console.error("Error during post-Apple-login processing:", error);
+          } finally {
+            setIsLoading(false);
+          }
         }
       });
     } catch (error: any) {
@@ -115,7 +91,41 @@ export default function LoginScreen() {
         throw new Error(error);
       }
     }
-  }
+  };
+
+  const signInWithGoogle = async () => {
+    try {
+      await authClient.signIn.social({
+        provider: "google",
+      }, {
+        onRequest: () => {
+          console.log("Trying signed in with Google");
+          setIsLoading(true);
+          errorRef.current = null;
+        },
+        onError: (ctx) => {
+          console.log("Failed signed in with Google");
+          setIsLoading(false);
+          errorRef.current = ctx.error.message!!;
+        },
+        onSuccess: async (ctx) => {
+          try {
+            console.log("Google auth success context:", ctx);
+          } catch (error) {
+            console.error("Error during post-Google-login processing:", error);
+          } finally {
+            setIsLoading(false);
+          }
+        }
+      });
+    } catch (error: any) {
+      if (error.code === 'ERR_REQUEST_CANCELED') {
+        Alert.alert("Google Sign In Cancelled", "Please try again");
+      } else {
+        throw new Error(error);
+      }
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>

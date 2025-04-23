@@ -1,0 +1,10 @@
+[install]
+# Save exact version, not a range (e.g. "1.0.0" instead of "^1.0.0")
+exact = true
+
+[install.cache]
+# Enable global cache
+global = true
+
+# Always use the latest compatible version of a dependency
+strategy = "last-successful" 

@@ -1,11 +1,41 @@
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, Alert, Modal, ActivityIndicator, Animated } from 'react-native';
 import { useState, useEffect } from 'react';
 import { LogOut, X, ChevronRight, Shield } from 'lucide-react-native';
-import { authClient } from "../../stores/auth";
+import { authClient } from "@/stores/auth";
 import { useGenerationStore, Generation } from '@/stores/generation';
 import { useCredits } from '@/hooks/useCredits';
 import { router } from 'expo-router';
 import { CreditTransaction } from '@/types';
+import { useProductMetadataContext } from '@/context/ProductMetadataProvider';
+
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffTime = Math.abs(now.getTime() - date.getTime());
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+  const diffMinutes = Math.floor(diffTime / (1000 * 60));
+
+  if (diffDays === 0) {
+    if (diffHours === 0) {
+      if (diffMinutes < 1) {
+        return 'Just now';
+      }
+      return `${diffMinutes} minutes ago`;
+    }
+    return `${diffHours} hours ago`;
+  } else if (diffDays === 1) {
+    return 'Yesterday';
+  } else if (diffDays < 7) {
+    return `${diffDays} days ago`;
+  } else {
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  }
+};
 
 const GenerationItem = ({ item }: { item: Generation }) => {
   const [originalImageLoaded, setOriginalImageLoaded] = useState(false);
@@ -22,32 +52,6 @@ const GenerationItem = ({ item }: { item: Generation }) => {
       }).start();
     }
   }, [originalImageLoaded, cartoonImageLoaded]);
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-    const diffMinutes = Math.floor(diffTime / (1000 * 60));
-
-    if (diffDays === 0) {
-      if (diffHours === 0) {
-        return `${diffMinutes} minutes ago`;
-      }
-      return `${diffHours} hours ago`;
-    } else if (diffDays === 1) {
-      return 'Yesterday';
-    } else if (diffDays < 7) {
-      return `${diffDays} days ago`;
-    } else {
-      return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      });
-    }
-  };
 
   return (
     <TouchableOpacity 
@@ -113,21 +117,28 @@ const GenerationItem = ({ item }: { item: Generation }) => {
 };
 
 const CreditItem = ({ item }: { item: CreditTransaction }) => {
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
+  const { metadataMap } = useProductMetadataContext();
+  
+  const getDisplayName = () => {
+    if (item.type === 'payment') {
+      return 'External Payment';
+    }
+    // Try to get the product name from metadata
+    const productId = item.type || '';
+    const metadata = metadataMap[productId];
+    
+    if (metadata?.name) {
+      return `Purchased ${metadata.name}`;
+    }
+    return 'External Payment';
   };
 
   return (
     <View style={styles.creditItem}>
       <View style={styles.creditInfo}>
-        <Text style={styles.creditType}>{item.type || "test"}</Text>
+        <Text style={styles.creditType}>{getDisplayName()}</Text>
         <Text style={styles.creditAmount}>
-          {item.amount > 0 ? '+' : ''}{item.amount} credits
+          {item.amount > 0 ? '+' : ''}{item.amount} {item.currency}
         </Text>
       </View>
       <Text style={styles.creditDate}>
