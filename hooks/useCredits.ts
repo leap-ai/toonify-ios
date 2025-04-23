@@ -8,7 +8,6 @@ import {
   PurchaseErrorEvent, 
   RestoreCompletedEvent, 
   RestoreErrorEvent,
-  ProductMetadata
 } from '@/types';
 
 export function useCredits() {
@@ -24,7 +23,6 @@ export function useCredits() {
     error, 
     fetchBalance,
     fetchHistory,
-    purchaseCredits
   } = store;
 
   // Combine loading states
@@ -43,34 +41,43 @@ export function useCredits() {
   };
 
   const handlePurchaseCompleted = async (event: PurchaseCompletedEvent) => {
-    console.log('✅ Purchase completed', event);
+    console.log('✅ Purchase completed on server', event);
     const productId = event.storeTransaction?.productIdentifier;
 
     if (productId) {
       const productMetadata = metadataMap[productId];
       const productName = productMetadata?.name || productId;
       
-      if (!productMetadata) {
-        console.warn('Product metadata not found for ID:', productId);
-        Alert.alert('Error', 'Product details not found. Please try again later.');
-        return;
+      console.log(`Purchase for ${productName} submitted. Triggering data refresh.`);
+
+      // Show immediate feedback that the purchase was submitted
+      // The actual credits are granted server-side via webhook
+      Alert.alert(
+        'Purchase Submitted', 
+        `Your purchase of ${productName} is being processed. Credits will be updated shortly.`
+      );
+
+      // Trigger balance and history refresh immediately.
+      // This initiates the 'polling' hoping the webhook has processed.
+      try {
+        // Using Promise.allSettled to ensure both fetches are attempted
+        // even if one potentially fails initially.
+        await Promise.allSettled([
+            fetchBalance(),
+            fetchHistory()
+        ]);
+        console.log('Balance and history refresh triggered after purchase.');
+      } catch (refreshError) {
+        // Log errors from refreshing, but don't block navigation
+        console.error('Error refreshing data after purchase:', refreshError);
       }
 
-      try {
-        const success = await purchaseCredits(event, productMetadata);
-        
-        if (success) {
-          Alert.alert('Success', `Credits purchased: ${productName}`);
-          router.back();
-        } else {
-          Alert.alert('Error', store.error || 'Failed to process purchase. Please contact support.');
-        }
-      } catch (error) {
-        console.error('Error calling purchaseCredits from hook:', error);
-        Alert.alert('Error', 'An unexpected error occurred. Please contact support.');
-      }
+      // Navigate back immediately after acknowledging the purchase
+      router.back();
+
     } else {
-      Alert.alert('Purchase Error', 'No product identifier found in transaction.');
+      console.error('Purchase completed event missing product identifier.');
+      Alert.alert('Purchase Error', 'Could not identify purchased product. Please contact support.');
     }
   };
 
@@ -80,7 +87,7 @@ export function useCredits() {
   };
 
   const handlePurchaseError = ({ error }: PurchaseErrorEvent) => {
-    console.error('❌ Purchase error:', error);
+    console.error('❌ Purchase error on client:', error);
     Alert.alert('Purchase Failed', `${error.code}: ${error.message}` || 'Something went wrong with the purchase.');
   };
 
@@ -88,22 +95,34 @@ export function useCredits() {
     console.log('🔁 Restore started');
   };
 
-  const handleRestoreCompleted = ({ customerInfo }: RestoreCompletedEvent) => {
-    console.log('✅ Restore completed', { customerInfo });
+  const handleRestoreCompleted = async ({ customerInfo }: RestoreCompletedEvent) => {
+    console.log('✅ Restore completed on client', { customerInfo });
     const allTransactions = customerInfo?.allPurchasedProductIdentifiers;
     
     if (allTransactions && allTransactions.length > 0) {
       const latestTransactionId = allTransactions[allTransactions.length - 1];
       const productMetadata = metadataMap[latestTransactionId];
       const productName = productMetadata?.name || latestTransactionId;
-      Alert.alert('Restored', `Restored purchase: ${productName}`);
+      Alert.alert('Restore Completed', `Purchases restored. ${productName} was the latest.`);
+      
+      // Trigger data refresh after restore as well
+      try {
+        await Promise.allSettled([
+            fetchBalance(),
+            fetchHistory()
+        ]);
+        console.log('Balance and history refresh triggered after restore.');
+      } catch (refreshError) {
+        console.error('Error refreshing data after restore:', refreshError);
+      }
+
     } else {
       Alert.alert('No Purchases Found', 'No previous purchases found to restore.');
     }
   };
 
   const handleRestoreError = ({ error }: RestoreErrorEvent) => {
-    console.error('❌ Restore error:', error);
+    console.error('❌ Restore error on client:', error);
     Alert.alert('Restore Failed', `${error.code}: ${error.message}` || 'Could not restore purchases.');
   };
 
@@ -122,7 +141,6 @@ export function useCredits() {
     // Actions
     fetchBalance,
     fetchHistory,
-    purchaseCredits,
     
     // Handlers
     handlePurchaseStarted,

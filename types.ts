@@ -55,6 +55,8 @@ export interface CreditTransaction {
   id: number;
   userId: number;
   amount: number;
-  type: string;
+  type?: string;
   createdAt: string;
+  status?: string;
+  currency?: string;
 } 

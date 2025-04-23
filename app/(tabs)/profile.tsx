@@ -5,14 +5,7 @@ import { authClient } from "../../stores/auth";
 import { useGenerationStore, Generation } from '@/stores/generation';
 import { useCredits } from '@/hooks/useCredits';
 import { router } from 'expo-router';
-
-interface CreditTransaction {
-  id: number;
-  userId: number;
-  amount: number;
-  type: string;
-  createdAt: string;
-}
+import { CreditTransaction } from '@/types';
 
 const GenerationItem = ({ item }: { item: Generation }) => {
   const [originalImageLoaded, setOriginalImageLoaded] = useState(false);
@@ -132,7 +125,7 @@ const CreditItem = ({ item }: { item: CreditTransaction }) => {
   return (
     <View style={styles.creditItem}>
       <View style={styles.creditInfo}>
-        <Text style={styles.creditType}>{item.type}</Text>
+        <Text style={styles.creditType}>{item.type || "test"}</Text>
         <Text style={styles.creditAmount}>
           {item.amount > 0 ? '+' : ''}{item.amount} credits
         </Text>
