@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useGenerationStore } from '../../stores/generation';
@@ -37,13 +37,21 @@ export default function GenerateScreen() {
         <Text style={styles.subtitle}>Upload a photo to transform it into a cartoon</Text>
         
         <TouchableOpacity
-          style={styles.uploadButton}
+          style={[
+            styles.uploadButton,
+            isLoading && styles.uploadButtonDisabled
+          ]}
           onPress={pickImage}
           disabled={isLoading}
         >
-          <Text style={styles.uploadButtonText}>
-            {isLoading ? 'Processing...' : 'Upload Photo'}
-          </Text>
+          {isLoading ? (
+            <View style={styles.buttonContent}>
+              <ActivityIndicator size="small" color="#fff" />
+              <Text style={styles.uploadButtonText}>Processing...</Text>
+            </View>
+          ) : (
+            <Text style={styles.uploadButtonText}>Upload Photo</Text>
+          )}
         </TouchableOpacity>
         
         {(error || localError) && (
@@ -83,6 +91,15 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     width: '100%',
     alignItems: 'center',
+  },
+  uploadButtonDisabled: {
+    backgroundColor: '#004a99', // Darker shade of blue when processing
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
   },
   uploadButtonText: {
     color: '#fff',
