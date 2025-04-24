@@ -60,35 +60,55 @@ export default function LoginScreen() {
   };
 
   const signInWithApple = async () => {
+    setIsLoading(true);
+    errorRef.current = null;
     try {
-      await authClient.signIn.social({
-        provider: "apple",
-      }, {
-        onRequest: () => {
-          console.log("Trying signed in with Apple");
-          setIsLoading(true);
-          errorRef.current = null;
-        },
-        onError: (ctx) => {
-          console.log("Failed signed in with Apple");
-          setIsLoading(false);
-          errorRef.current = ctx.error.message!!;
-        },
-        onSuccess: async (ctx) => {
-          try {
-            console.log("Apple auth success context:", ctx);
-          } catch (error) {
-            console.error("Error during post-Apple-login processing:", error);
-          } finally {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+      console.log("Apple Credential Received:", credential.identityToken ? 'Token OK' : 'No Token');
+
+      if (credential.identityToken) {
+        // Now sign in with better-auth using the ID token
+        await authClient.signIn.social({
+          provider: "apple",
+          idToken: { token: credential.identityToken }
+        }, {
+          onRequest: () => {
+            console.log("Sending Apple ID Token to better-auth backend...");
+            // Already set isLoading = true
+          },
+          onError: (ctx) => {
+            console.error("better-auth Apple ID Token sign-in failed:", ctx.error);
+            errorRef.current = ctx.error.message || "Apple sign-in failed during backend verification.";
+            setIsLoading(false);
+          },
+          onSuccess: (ctx) => {
+            console.log("better-auth Apple ID Token sign-in successful:", ctx);
+            // Session update should trigger navigation via _layout.tsx
+            // Optionally handle RevenueCat login here if needed, similar to email login
+             const userId = ctx?.data?.user?.id;
+             if (userId) {
+               handleRevenueCatLogin(userId);
+             }
             setIsLoading(false);
           }
-        }
-      });
-    } catch (error: any) {
-      if (error.code === 'ERR_REQUEST_CANCELED') {
-        Alert.alert("Apple Sign In Cancelled", "Please try again");
+        });
       } else {
-        throw new Error(error);
+        throw new Error("Apple Sign-In did not return an identity token.");
+      }
+
+    } catch (e: any) {
+      setIsLoading(false);
+      if (e.code === 'ERR_REQUEST_CANCELED') {
+        console.log("Apple Sign-In cancelled by user.");
+        // Maybe set errorRef.current = "Sign-in cancelled.";
+      } else {
+        console.error("Apple Sign-In Error:", e);
+        errorRef.current = e.message || "An unknown error occurred during Apple Sign-In.";
       }
     }
   };
@@ -111,6 +131,10 @@ export default function LoginScreen() {
         onSuccess: async (ctx) => {
           try {
             console.log("Google auth success context:", ctx);
+            const userId = ctx?.data?.user?.id;
+            if (userId) {
+              handleRevenueCatLogin(userId);
+            }
           } catch (error) {
             console.error("Error during post-Google-login processing:", error);
           } finally {

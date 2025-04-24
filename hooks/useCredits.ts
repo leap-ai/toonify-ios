@@ -72,8 +72,8 @@ export function useCredits() {
         console.error('Error refreshing data after purchase:', refreshError);
       }
 
-      // Navigate back immediately after acknowledging the purchase
-      router.back();
+      // Navigate to profile immediately for acknowledging the purchase and credits update
+      router.replace("/(tabs)/profile");
 
     } else {
       console.error('Purchase completed event missing product identifier.');
