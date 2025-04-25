@@ -24,7 +24,14 @@ module.exports = function (api) {
             "@better-auth/expo/client": "./node_modules/@better-auth/expo/dist/client.cjs",
           },
         },
-      ]
+      ],
+      [
+        '@tamagui/babel-plugin',
+        {
+          components: ['tamagui'],
+          config: './tamagui.config.ts',
+        },
+      ],
     ],
   };
 }; 

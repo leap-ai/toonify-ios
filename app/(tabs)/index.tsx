@@ -1,63 +1,36 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import { useRouter } from 'expo-router';
-import { useGenerationStore } from '../../stores/generation';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, StyleSheet, Image, ScrollView } from 'react-native';
+import { YStack, Button, H1, Text } from 'tamagui';
+import { useAppTheme } from '@/context/ThemeProvider';
+import { useGenerationStore } from '@/stores/generation';
+import CreateCard from '@/components/CreateCard';
 
 export default function GenerateScreen() {
-  const router = useRouter();
-  const { generateImage, isLoading, error } = useGenerationStore();
+  const { getCurrentTheme } = useAppTheme();
+  const theme = getCurrentTheme();
+  const { isLoading } = useGenerationStore();
   const [localError, setLocalError] = useState<string | null>(null);
-
-  const pickImage = async () => {
-    try {
-      setLocalError(null);
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 1,
-      });
-
-      if (!result.canceled) {
-        await generateImage(result.assets[0].uri);
-        router.push('/(tabs)/history');
-      }
-    } catch (err) {
-      console.error('Error picking image:', err);
-      setLocalError('Failed to pick image. Please try again.');
-      Alert.alert('Error', 'Failed to pick image. Please try again.');
-    }
-  };
-
+  
   return (
-    <View style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>Create Your Cartoon</Text>
-        <Text style={styles.subtitle}>Upload a photo to transform it into a cartoon</Text>
-        
-        <TouchableOpacity
-          style={[
-            styles.uploadButton,
-            isLoading && styles.uploadButtonDisabled
-          ]}
-          onPress={pickImage}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <View style={styles.buttonContent}>
-              <ActivityIndicator size="small" color="#fff" />
-              <Text style={styles.uploadButtonText}>Processing...</Text>
+    <View style={[styles.container, { backgroundColor: theme.screenBackground }]}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <YStack alignItems="center" marginTop="$6" marginBottom="$4">
+          <View style={styles.logoWrapper}>
+            <View>
+              <Image 
+                source={require('@/assets/images/toonify-logo.png')} 
+                style={styles.logo}
+                resizeMode="cover"
+              />
             </View>
-          ) : (
-            <Text style={styles.uploadButtonText}>Upload Photo</Text>
-          )}
-        </TouchableOpacity>
+          </View>
+        </YStack>
         
-        {(error || localError) && (
-          <Text style={styles.errorText}>{error || localError}</Text>
-        )}
-      </View>
+        <CreateCard 
+          error={localError}
+          onErrorChange={setLocalError}
+        />
+      </ScrollView>
     </View>
   );
 }
@@ -65,50 +38,15 @@ export default function GenerateScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
-  content: {
-    flex: 1,
+  logoWrapper: {
+    width: 360,
+    height: 360,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 20,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#333',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 40,
-    textAlign: 'center',
-  },
-  uploadButton: {
-    backgroundColor: '#007AFF',
-    padding: 16,
-    borderRadius: 8,
-    width: '100%',
-    alignItems: 'center',
-  },
-  uploadButtonDisabled: {
-    backgroundColor: '#004a99', // Darker shade of blue when processing
-  },
-  buttonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  uploadButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  errorText: {
-    color: '#ff3b30',
-    marginTop: 20,
-    textAlign: 'center',
-  },
+  logo: {
+    width: 360,
+    height: 360,
+  }
 });

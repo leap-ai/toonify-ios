@@ -1,178 +1,33 @@
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, Alert, Modal, ActivityIndicator, Animated } from 'react-native';
-import { useState, useEffect } from 'react';
-import { LogOut, X, ChevronRight, Shield } from 'lucide-react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, Alert, Modal } from 'react-native';
+import { LogOut, Palette, X, ChevronUp, ChevronDown } from 'lucide-react-native';
 import { authClient } from "@/stores/auth";
-import { useGenerationStore, Generation } from '@/stores/generation';
 import { useCredits } from '@/hooks/useCredits';
 import { router } from 'expo-router';
-import { CreditTransaction } from '@/types';
-import { useProductMetadataContext } from '@/context/ProductMetadataProvider';
-
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffTime = Math.abs(now.getTime() - date.getTime());
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-  const diffMinutes = Math.floor(diffTime / (1000 * 60));
-
-  if (diffDays === 0) {
-    if (diffHours === 0) {
-      if (diffMinutes < 1) {
-        return 'Just now';
-      }
-      return `${diffMinutes} minutes ago`;
-    }
-    return `${diffHours} hours ago`;
-  } else if (diffDays === 1) {
-    return 'Yesterday';
-  } else if (diffDays < 7) {
-    return `${diffDays} days ago`;
-  } else {
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  }
-};
-
-const GenerationItem = ({ item }: { item: Generation }) => {
-  const [originalImageLoaded, setOriginalImageLoaded] = useState(false);
-  const [cartoonImageLoaded, setCartoonImageLoaded] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const fadeAnim = new Animated.Value(0);
-
-  useEffect(() => {
-    if (originalImageLoaded && cartoonImageLoaded) {
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [originalImageLoaded, cartoonImageLoaded]);
-
-  return (
-    <TouchableOpacity 
-      style={styles.generationItem}
-      onPress={() => router.push('/history')}
-    >
-      <View style={styles.generationImages}>
-        <View style={styles.imageWrapper}>
-          {!originalImageLoaded && (
-            <View style={styles.loaderContainer}>
-              <ActivityIndicator size="small" color="#007AFF" />
-            </View>
-          )}
-          <Animated.View style={{ opacity: fadeAnim }}>
-            <Image 
-              source={{ uri: item.originalImageUrl }} 
-              style={styles.thumbnail}
-              onLoad={() => setOriginalImageLoaded(true)}
-            />
-          </Animated.View>
-        </View>
-        <View style={styles.imageWrapper}>
-          {!cartoonImageLoaded && (
-            <View style={styles.loaderContainer}>
-              <ActivityIndicator size="small" color="#007AFF" />
-            </View>
-          )}
-          <Animated.View style={{ opacity: fadeAnim }}>
-            <Image 
-              source={{ uri: item.cartoonImageUrl }} 
-              style={styles.thumbnail}
-              onLoad={() => setCartoonImageLoaded(true)}
-            />
-          </Animated.View>
-        </View>
-      </View>
-      <Text style={styles.dateText}>
-        {formatDate(item.createdAt)}
-      </Text>
-
-      <Modal
-        visible={!!selectedImage}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setSelectedImage(null)}
-      >
-        <View style={styles.modalContainer}>
-          <TouchableOpacity 
-            style={styles.closeButton}
-            onPress={() => setSelectedImage(null)}
-          >
-            <X size={24} color="#fff" />
-          </TouchableOpacity>
-          <Image 
-            source={{ uri: selectedImage || '' }} 
-            style={styles.fullScreenImage}
-            resizeMode="contain"
-          />
-        </View>
-      </Modal>
-    </TouchableOpacity>
-  );
-};
-
-const CreditItem = ({ item }: { item: CreditTransaction }) => {
-  const { metadataMap } = useProductMetadataContext();
-  
-  const getDisplayName = () => {
-    if (item.type === 'payment') {
-      return 'External Payment';
-    }
-    // Try to get the product name from metadata
-    const productId = item.type || '';
-    const metadata = metadataMap[productId];
-    
-    if (metadata?.name) {
-      return `Purchased ${metadata.name}`;
-    }
-    return 'External Payment';
-  };
-
-  return (
-    <View style={styles.creditItem}>
-      <View style={styles.creditInfo}>
-        <Text style={styles.creditType}>{getDisplayName()}</Text>
-        <Text style={styles.creditAmount}>
-          {item.amount > 0 ? '+' : ''}{item.amount} {item.currency}
-        </Text>
-      </View>
-      <Text style={styles.creditDate}>
-        {formatDate(item.createdAt)}
-      </Text>
-    </View>
-  );
-};
-
-const InfoItem = ({ title, value, onPress }: { title: string; value?: string; onPress?: () => void }) => (
-  <TouchableOpacity 
-    style={styles.infoItem} 
-    onPress={onPress}
-    disabled={!onPress}
-  >
-    <Text style={styles.infoTitle}>{title}</Text>
-    <View style={styles.infoValueContainer}>
-      {value && <Text style={styles.infoValue}>{value}</Text>}
-      {onPress && <ChevronRight size={20} color="#666" />}
-    </View>
-  </TouchableOpacity>
-);
+import { 
+  Text, 
+  Button, 
+  YStack, 
+  XStack, 
+  Card, 
+  Separator, 
+  Avatar, 
+  Spinner, 
+  ScrollView,
+  H4
+} from 'tamagui';
+import { useAppTheme } from '@/context/ThemeProvider';
+import ThemeSelector from '@/components/ThemeSelector';
+import InfoItem from '@/components/InfoItem';
+import CreditItem from '@/components/CreditItem';
 
 export default function ProfileScreen() {
   const { data: session } = authClient.useSession();
-
-  const { generations, isLoading, error, fetchGenerations } = useGenerationStore();
   const { history: creditHistory, isLoading: isCreditsLoading, creditsBalance } = useCredits();
-
-  useEffect(() => {
-    if (session?.user.id) {
-      fetchGenerations();
-    }
-  }, [session?.user?.id]);
+  const { getCurrentTheme, activeThemeVariant } = useAppTheme();
+  const theme = getCurrentTheme();
+  const [isCreditsExpanded, setIsCreditsExpanded] = useState(false);
+  const [showThemeModal, setShowThemeModal] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -184,243 +39,221 @@ export default function ProfileScreen() {
     }
   };
 
-  const recentGenerations = generations.slice(0, 3);
+  const toggleCreditsExpanded = () => {
+    setIsCreditsExpanded(!isCreditsExpanded);
+  };
+
+  const visibleTransactions = isCreditsExpanded 
+    ? creditHistory 
+    : creditHistory.slice(0, 3);
 
   return (
-    <View style={styles.container}>
-      <View style={styles.userInfoContainer}>
-        <View style={styles.userHeader}>
-          <View>
-            <Text style={styles.userName}>{session?.user?.name}</Text>
-            <Text style={styles.userEmail}>{session?.user?.email}</Text>
-          </View>
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <LogOut size={24} color="#fff" />
-            <Text style={styles.logoutText}>Logout</Text>
-          </TouchableOpacity>
-        </View>
+    <>
+      <ScrollView 
+        style={[styles.container, { backgroundColor: theme.screenBackground }]} 
+        contentContainerStyle={{ padding: 15 }}
+      >
+        <Card 
+          bordered 
+          elevate 
+          marginBottom="$4" 
+          paddingVertical="$2"
+          paddingHorizontal="$4"
+          backgroundColor={theme.card}
+          borderColor={theme.cardBorder}
+        >
+          <XStack space="$3" alignItems="center">
+            <Avatar circular size="$6">
+              <Avatar.Image source={{ uri: 'https://i.pravatar.cc/300' }} />
+              <Avatar.Fallback backgroundColor={theme.tint} />
+            </Avatar>
+            <YStack flex={1}>
+              <Text 
+                fontSize="$4" 
+                fontWeight="bold"
+                color={theme.text.primary}
+              >
+                {session?.user?.name}
+              </Text>
+              <Text 
+                fontSize="$2" 
+                color={theme.text.secondary}
+              >
+                {session?.user?.email}
+              </Text>
+            </YStack>
+            <Button 
+              icon={<LogOut size={18} color={theme.text.primary} />}
+              onPress={handleLogout}
+              size="$3"
+              chromeless
+              color={theme.text.primary}
+            >
+              Logout
+            </Button>
+          </XStack>
+          
+          <Separator marginVertical="$4" backgroundColor={theme.separator} />
+          
+          <XStack justifyContent="space-between" alignItems="center">
+            <Text color={theme.text.primary}>Available Credits</Text>
+            <Text 
+              fontSize="$4" 
+              fontWeight="bold"
+              color={theme.text.primary}
+            >
+              {creditsBalance}
+            </Text>
+          </XStack>
+        </Card>
 
-        <View style={styles.infoSection}>
-          <InfoItem title="Available Credits" value={`${creditsBalance} credits`} />
-          <InfoItem title="Total Generations" value={generations.length.toString()} />
+        <YStack space="$4">
+          <YStack space="$2">
+            <H4 
+              fontWeight="bold" 
+              marginBottom="$2"
+              color={theme.text.primary}
+            >
+              Credits History
+            </H4>
+            
+            {isCreditsLoading ? (
+              <YStack alignItems="center" padding="$4">
+                <Spinner size="large" color={theme.tint} />
+                <Text marginTop="$2" color={theme.text.secondary}>Loading credits history...</Text>
+              </YStack>
+            ) : creditHistory.length > 0 ? (
+              <YStack>
+                <YStack>
+                  {visibleTransactions.map((transaction) => (
+                    <CreditItem key={transaction.id} item={transaction} />
+                  ))}
+                </YStack>
+                
+                {creditHistory.length > 3 && (
+                  <Button 
+                    onPress={toggleCreditsExpanded}
+                    marginTop="$2"
+                    variant="outlined"
+                    borderColor={theme.cardBorder}
+                    backgroundColor="transparent"
+                    color={theme.text.primary}
+                    fontWeight="bold"
+                    icon={isCreditsExpanded ?
+                      <ChevronUp size={18} color={theme.text.primary} /> :
+                      <ChevronDown size={18} color={theme.text.primary} />
+                    }
+                  >
+                    {isCreditsExpanded ? "Show Less" : "Show More"}
+                  </Button>
+                )}
+              </YStack>
+            ) : (
+              <Card 
+                padding="$4" 
+                bordered 
+                alignItems="center"
+                backgroundColor={theme.card}
+                borderColor={theme.cardBorder}
+              >
+                <Text 
+                  marginBottom="$2" 
+                  textAlign="center"
+                  color={theme.text.secondary}
+                >
+                  No credits history available.
+                </Text>
+                <Button 
+                  onPress={() => router.push('/credits')}
+                  themeInverse
+                  backgroundColor={theme.tint}
+                  color={theme.background}
+                  size="$3"
+                >
+                  Get Credits
+                </Button>
+              </Card>
+            )}
+          </YStack>
+
+          <YStack space="$2">
+            <H4 
+              fontWeight="bold" 
+              marginBottom="$2"
+              color={theme.text.primary}
+            >
+              Account Settings
+            </H4>
+            
+            <InfoItem 
+              title="Theme Settings" 
+              onPress={() => setShowThemeModal(true)}
+              value={activeThemeVariant.name}
+              icon={<Palette size={18} color={theme.tint} />}
+            />
           <InfoItem 
             title="Privacy Policy" 
             onPress={() => router.push('/privacy-policy')}
-          />
-        </View>
-      </View>
+              icon={<View style={{ width: 18 }} />}
+            />
+            <InfoItem 
+              title="Terms of Service" 
+              onPress={() => {}}
+              icon={<View style={{ width: 18 }} />}
+            />
+            <InfoItem 
+              title="App Version" 
+              value="1.0.0"
+              icon={<View style={{ width: 18 }} />}
+            />
+          </YStack>
+        </YStack>
+      </ScrollView>
 
-      <View style={styles.section}>
-        <Text style={styles.title}>Recent Generations</Text>
-        {error && <Text style={styles.errorText}>{error}</Text>}
-        <FlatList
-          data={recentGenerations}
-          renderItem={({ item }) => <GenerationItem item={item} />}
-          keyExtractor={(item) => item.id.toString()}
-          scrollEnabled={false}
-        />
-        {generations.length > 5 && (
-          <TouchableOpacity 
-            style={styles.showMoreButton}
-            onPress={() => router.push('/history')}
-          >
-            <Text style={styles.showMoreText}>Show More</Text>
-            <ChevronRight size={20} color="#007AFF" />
-          </TouchableOpacity>
-        )}
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.title}>Credit Transactions</Text>
-        {isCreditsLoading ? (
-          <ActivityIndicator size="small" color="#007AFF" />
-        ) : creditHistory.length === 0 ? (
-          <Text style={styles.emptyText}>No credit transactions yet</Text>
-        ) : (
-          <FlatList
-            data={creditHistory}
-            renderItem={({ item }) => <CreditItem item={item} />}
-            keyExtractor={(item) => item.id.toString()}
-            scrollEnabled={false}
-          />
-        )}
+      <Modal
+        visible={showThemeModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowThemeModal(false)}
+      >
+        <View style={[styles.modalContainer, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
+          <View style={[styles.modalContent, { backgroundColor: theme.background }]}>
+            <XStack justifyContent="space-between" alignItems="center" marginBottom="$3">
+              <H4 color={theme.text.primary}>Theme Settings</H4>
+              <Button 
+                chromeless
+                circular 
+                onPress={() => setShowThemeModal(false)} 
+                icon={<X size={24} color={theme.text.primary} />}
+              />
+            </XStack>
+            <ThemeSelector onClose={() => setShowThemeModal(false)} />
       </View>
     </View>
+      </Modal>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    padding: 20,
-  },
-  userInfoContainer: {
-    backgroundColor: '#f8f8f8',
-    padding: 20,
-    borderRadius: 15,
-    marginBottom: 20,
-  },
-  userHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 20,
-  },
-  userName: {
-    fontSize: 24,
-    fontWeight: '700',
-    marginBottom: 5,
-  },
-  userEmail: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 5,
-  },
-  logoutButton: {
-    backgroundColor: '#dc2626',
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 10,
-    borderRadius: 8,
-    gap: 8,
-  },
-  logoutText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  infoSection: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 15,
-  },
-  infoItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  infoTitle: {
-    fontSize: 16,
-    color: '#333',
-  },
-  infoValueContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  infoValue: {
-    fontSize: 16,
-    color: '#666',
-  },
-  section: {
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 15,
-  },
-  errorText: {
-    color: '#dc2626',
-    marginBottom: 10,
-  },
-  generationItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f8f8f8',
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  generationImages: {
-    flexDirection: 'row',
-    gap: 8,
-    marginRight: 10,
-  },
-  imageWrapper: {
-    width: 40,
-    height: 40,
-    borderRadius: 4,
-    backgroundColor: '#eee',
-    overflow: 'hidden',
-  },
-  thumbnail: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 4,
-  },
-  loaderContainer: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#eee',
-  },
-  dateText: {
-    fontSize: 14,
-    color: '#666',
-    marginLeft: 'auto',
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'flex-end',
   },
-  closeButton: {
-    position: 'absolute',
-    top: 60,
-    right: 20,
-    padding: 10,
-  },
-  fullScreenImage: {
-    width: '100%',
-    height: '80%',
-  },
-  creditItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  creditInfo: {
-    flex: 1,
-  },
-  creditType: {
-    fontSize: 16,
-    fontWeight: '600',
-    textTransform: 'capitalize',
-  },
-  creditAmount: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
-  },
-  creditDate: {
-    fontSize: 14,
-    color: '#666',
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  showMoreButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 10,
-    gap: 8,
-  },
-  showMoreText: {
-    color: '#007AFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+  modalContent: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: -2
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  }
 });

@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { authClient } from '../stores/auth';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, useColorScheme } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { TransitionLayout } from '@/components/TransitionLayout';
 import { ProductMetadataProvider } from '@/context/ProductMetadataProvider';
@@ -11,13 +11,20 @@ export default function RootLayout() {
   const {
     data: session,
     isPending, //loading state
-} = authClient.useSession()
+  } = authClient.useSession();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
 
   if (isPending) {
     return (
       <SafeAreaProvider>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator size="large" color="#0000ff" />
+        <View style={{ 
+          flex: 1, 
+          justifyContent: 'center', 
+          alignItems: 'center',
+          backgroundColor: isDark ? '#121212' : '#FFFFFF' 
+        }}>
+          <ActivityIndicator size="large" color={isDark ? '#FFFFFF' : '#0000ff'} />
         </View>
       </SafeAreaProvider>
     );
@@ -34,7 +41,7 @@ export default function RootLayout() {
           )}
           <Stack.Screen name="+not-found" />
         </Stack>
-        <StatusBar style="auto" />
+        <StatusBar style={isDark ? 'light' : 'dark'} />
       </TransitionLayout>
     </ProductMetadataProvider>
   );

@@ -39,7 +39,7 @@ export const useGenerationStore = create<GenerationState>((set) => ({
       console.log('Sending request to backend...');
       const headers = await getAuthHeaders();
       const response = await axios.post(`${API_URL}/api/generation/generate`, formData, {
-        timeout: 60000, // 60 second timeout for image processing
+        timeout: 200000, // 200 second timeout for image processing
         headers: {
           ...headers,
           'Content-Type': 'multipart/form-data',

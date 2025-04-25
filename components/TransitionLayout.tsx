@@ -1,22 +1,13 @@
-import { View, Animated } from 'react-native';
-import { useEffect, useRef } from 'react';
+import { View } from 'react-native';
 import { usePathname } from 'expo-router';
 
 export function TransitionLayout({ children }: { children: React.ReactNode }) {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+  // We're keeping the pathname reference for potential future use
   const pathname = usePathname();
 
-  useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
-  }, [pathname]);
-
   return (
-    <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
+    <View style={{ flex: 1 }}>
       {children}
-    </Animated.View>
+    </View>
   );
 } 

@@ -1,291 +1,142 @@
 import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  Image,
-  ActivityIndicator,
-  TouchableOpacity,
-  ScrollView,
-  Animated,
-  Modal,
-} from 'react-native';
+import { View, FlatList, Dimensions, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useGenerationStore } from '../../stores/generation';
-import { ArrowLeft, X } from 'lucide-react-native';
+import { ArrowLeft } from 'lucide-react-native';
+import { 
+  Text, 
+  Button, 
+  YStack, 
+  XStack, 
+  Card, 
+  Spinner, 
+  H4
+} from 'tamagui';
+import { useAppTheme } from '@/context/ThemeProvider';
+import { Generation } from '@/components/GenerationItem';
+import { GridItem } from '@/components/GridItem';
+import { ImageDetailsModal } from '@/components/ImageDetailsModal';
 
-interface Generation {
-  id: number;
-  originalImageUrl: string;
-  cartoonImageUrl: string;
-  createdAt: string;
-}
-
-const GenerationItem = ({ item }: { item: Generation }) => {
-  const router = useRouter();
-  const [originalImageLoaded, setOriginalImageLoaded] = useState(false);
-  const [cartoonImageLoaded, setCartoonImageLoaded] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const fadeAnim = new Animated.Value(0);
-
-  useEffect(() => {
-    if (originalImageLoaded && cartoonImageLoaded) {
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [originalImageLoaded, cartoonImageLoaded]);
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-    const diffMinutes = Math.floor(diffTime / (1000 * 60));
-
-    if (diffDays === 0) {
-      if (diffHours === 0) {
-        return `${diffMinutes} minutes ago`;
-      }
-      return `${diffHours} ${diffHours === 1 && "hour" || "hours"} ago`;
-    } else if (diffDays === 1) {
-      return 'Yesterday';
-    } else if (diffDays < 7) {
-      return `${diffDays} days ago`;
-    } else {
-      return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      });
-    }
-  };
-
-  return (
-    <View style={styles.generationItem}>
-      <View style={styles.imagesContainer}>
-        <TouchableOpacity 
-          style={styles.imageWrapper}
-          onPress={() => setSelectedImage(item.originalImageUrl)}
-        >
-          {!originalImageLoaded && (
-            <View style={styles.loaderContainer}>
-              <ActivityIndicator size="small" color="#007AFF" />
-            </View>
-          )}
-          <Animated.View style={{ opacity: fadeAnim }}>
-            <Image 
-              source={{ uri: item.originalImageUrl }} 
-              style={styles.thumbnail}
-              onLoad={() => setOriginalImageLoaded(true)}
-            />
-          </Animated.View>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.imageWrapper}
-          onPress={() => setSelectedImage(item.cartoonImageUrl)}
-        >
-          {!cartoonImageLoaded && (
-            <View style={styles.loaderContainer}>
-              <ActivityIndicator size="small" color="#007AFF" />
-            </View>
-          )}
-          <Animated.View style={{ opacity: fadeAnim }}>
-            <Image 
-              source={{ uri: item.cartoonImageUrl }} 
-              style={styles.thumbnail}
-              onLoad={() => setCartoonImageLoaded(true)}
-            />
-          </Animated.View>
-        </TouchableOpacity>
-      </View>
-      <Text style={styles.generationDate}>
-        {formatDate(item.createdAt)}
-      </Text>
-
-      <Modal
-        visible={!!selectedImage}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setSelectedImage(null)}
-      >
-        <View style={styles.modalContainer}>
-          <TouchableOpacity 
-            style={styles.closeButton}
-            onPress={() => setSelectedImage(null)}
-          >
-            <X size={24} color="#fff" />
-          </TouchableOpacity>
-          <Image 
-            source={{ uri: selectedImage || '' }} 
-            style={styles.fullScreenImage}
-            resizeMode="contain"
-          />
-        </View>
-      </Modal>
-    </View>
-  );
-};
+// Grid layout configuration
+const { width } = Dimensions.get('window');
+const COLUMN_COUNT = 2;
+const SPACING = 12;
+// Calculate width to ensure even spacing on both sides
+const CONTAINER_PADDING = SPACING;
+const ITEM_WIDTH = (width - (2 * CONTAINER_PADDING) - (SPACING * (COLUMN_COUNT - 1))) / COLUMN_COUNT;
 
 export default function HistoryScreen() {
   const router = useRouter();
   const { generations, fetchGenerations, isLoading: isGenerationsLoading } = useGenerationStore();
+  const { getCurrentTheme } = useAppTheme();
+  const theme = getCurrentTheme();
+  const [selectedItem, setSelectedItem] = useState<Generation | null>(null);
 
   useEffect(() => {
     fetchGenerations();
   }, [fetchGenerations]);
 
+  const handleItemPress = (item: Generation) => {
+    setSelectedItem(item);
+  };
+
+  const renderItem = ({ item, index }: { item: Generation; index: number }) => (
+    <GridItem
+      item={item}
+      index={index}
+      itemWidth={ITEM_WIDTH}
+      theme={theme}
+      onPress={() => handleItemPress(item)}
+    />
+  );
+
   if (isGenerationsLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
-      </View>
+      <YStack 
+        flex={1} 
+        justifyContent="center" 
+        alignItems="center"
+        backgroundColor={theme.screenBackground}
+      >
+        <Spinner size="large" color={theme.tint} />
+        <Text marginTop="$2" color={theme.text.secondary}>Loading your cartoons...</Text>
+      </YStack>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <ArrowLeft size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.title}>History</Text>
-      </View>
+    <YStack flex={1} backgroundColor={theme.screenBackground}>
+      <XStack 
+        padding="$3" 
+        alignItems="center" 
+        borderBottomColor={theme.separator} 
+        borderBottomWidth={1}
+        backgroundColor={theme.headerBackground}
+      >
+        <Button 
+          icon={<ArrowLeft size={20} color={theme.text.primary} />} 
+          onPress={() => router.back()} 
+          chromeless
+          marginRight="$2"
+        />
+        <H4 color={theme.text.primary} fontWeight="bold">Your Cartoons</H4>
+      </XStack>
+      
+      {generations.length === 0 ? (
+        <YStack padding="$3" flex={1} justifyContent="center">
+          <Card 
+            padding="$5" 
+            bordered 
+            alignItems="center"
+            backgroundColor={theme.card}
+            borderColor={theme.cardBorder}
+          >
+            <Text 
+              fontSize="$3" 
+              color={theme.text.secondary} 
+              marginBottom="$4" 
+              textAlign="center"
+            >
+              No cartoons generated yet
+            </Text>
+            <Button
+              themeInverse
+              size="$4"
+              onPress={() => router.push('/')}
+              fontWeight="bold"
+              backgroundColor={theme.tint}
+              color={theme.background}
+            >
+              Generate Your First Cartoon
+            </Button>
+          </Card>
+        </YStack>
+      ) : (
+        <FlatList
+          data={generations}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={styles.gridContainer}
+          numColumns={COLUMN_COUNT}
+          columnWrapperStyle={styles.columnWrapper}
+        />
+      )}
 
-      <ScrollView style={styles.content}>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Your Cartoons</Text>
-          {generations.length === 0 ? (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No cartoons generated yet</Text>
-              <TouchableOpacity
-                style={styles.generateButton}
-                onPress={() => router.push('/')}
-              >
-                <Text style={styles.generateButtonText}>Generate Your First Cartoon</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <FlatList
-              data={generations}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) => <GenerationItem item={item} />}
-              scrollEnabled={false}
-            />
-          )}
-        </View>
-      </ScrollView>
-    </View>
+      <ImageDetailsModal
+        isVisible={!!selectedItem}
+        onClose={() => setSelectedItem(null)}
+        item={selectedItem}
+      />
+    </YStack>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
+  gridContainer: {
+    padding: SPACING,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  backButton: {
-    marginRight: 16,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  content: {
-    flex: 1,
-  },
-  section: {
-    padding: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    padding: 20,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 16,
-  },
-  generateButton: {
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-  generateButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  generationItem: {
-    backgroundColor: '#f8f8f8',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 15,
-  },
-  imagesContainer: {
-    flexDirection: 'row',
+  columnWrapper: {
     justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  imageWrapper: {
-    width: '48%',
-    height: 150,
-    borderRadius: 8,
-    backgroundColor: '#eee',
-    overflow: 'hidden',
-  },
-  thumbnail: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 8,
-  },
-  loaderContainer: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#eee',
-  },
-  generationDate: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  closeButton: {
-    position: 'absolute',
-    top: 60,
-    right: 20,
-    padding: 10,
-  },
-  fullScreenImage: {
-    width: '100%',
-    height: '80%',
-  },
+    marginBottom: SPACING,
+  }
 }); 
