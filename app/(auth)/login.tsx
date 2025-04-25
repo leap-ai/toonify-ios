@@ -15,10 +15,15 @@ import {
   Card,
   useTheme
 } from 'tamagui';
+import * as WebBrowser from 'expo-web-browser';
+import * as Google from 'expo-auth-session/providers/google';
 
 // Pre-define image sources for easier reference and preloading
 const APPLE_LOGO = "@/assets/images/apple-logo.png";
 const GOOGLE_LOGO = "@/assets/images/google-logo.png";
+
+// Initialize WebBrowser
+WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -28,6 +33,57 @@ export default function LoginScreen() {
   const theme = useTheme();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+
+  // Google Sign In Hook
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID, // From .env
+    // androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID, // Uncomment if needed
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID, // From .env
+    // expoClientId: process.env.EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID // Can often use webClientId here too
+  });
+
+  // Effect to handle Google response
+  useEffect(() => {
+    if (response?.type === 'success') {
+      const { authentication } = response;
+      if (authentication?.idToken) {
+        // Now sign in with better-auth using the ID token
+        setIsLoading(true);
+        authClient.signIn.social({
+          provider: "google",
+          idToken: { 
+            token: authentication.idToken, 
+            accessToken: authentication.accessToken
+          }
+        }, {
+          onRequest: () => {
+          },
+          onError: (ctx) => {
+            console.error("better-auth Google ID Token sign-in failed:", ctx.error);
+            errorRef.current = ctx.error.message || "Google sign-in failed during backend verification.";
+            setIsLoading(false);
+          },
+          onSuccess: (ctx) => {
+             const userId = ctx?.data?.user?.id;
+             if (userId) {
+               handleRevenueCatLogin(userId);
+             }
+            setIsLoading(false);
+          }
+        });
+      } else {
+         console.warn("Google Sign-In success response did not contain ID token.");
+         setIsLoading(false);
+      }
+    } else if (response?.type === 'error') {
+        console.error("Google Sign-In Error (expo-auth-session):", response.error);
+        errorRef.current = response.error?.message || "Google Sign-In failed.";
+        setIsLoading(false);
+    } else if (response?.type === 'cancel') {
+        console.log("Google Sign-In cancelled by user.");
+        setIsLoading(false);
+    }
+  }, [response]);
 
   const navigateToSignup = () => {
     router.push({
@@ -65,11 +121,9 @@ export default function LoginScreen() {
       },
       onSuccess: async (ctx) => {
         try {
-          console.log("Email auth success context:", ctx);
           const userId = ctx?.data?.user?.id;
           
           if (userId) {
-            console.log("User authenticated with ID:", userId);
             await handleRevenueCatLogin(userId);
           } else {
             console.warn("Could not extract user ID after successful email login");
@@ -93,7 +147,6 @@ export default function LoginScreen() {
           AppleAuthentication.AppleAuthenticationScope.EMAIL,
         ],
       });
-      console.log("Apple Credential Received:", credential.identityToken ? 'Token OK' : 'No Token');
 
       if (credential.identityToken) {
         // Now sign in with better-auth using the ID token
@@ -111,9 +164,6 @@ export default function LoginScreen() {
             setIsLoading(false);
           },
           onSuccess: (ctx) => {
-            console.log("better-auth Apple ID Token sign-in successful:", ctx);
-            // Session update should trigger navigation via _layout.tsx
-            // Optionally handle RevenueCat login here if needed, similar to email login
              const userId = ctx?.data?.user?.id;
              if (userId) {
                handleRevenueCatLogin(userId);
@@ -138,41 +188,11 @@ export default function LoginScreen() {
   };
 
   const signInWithGoogle = async () => {
-    try {
-      await authClient.signIn.social({
-        provider: "google",
-      }, {
-        onRequest: () => {
-          console.log("Trying signed in with Google");
-          setIsLoading(true);
-          errorRef.current = null;
-        },
-        onError: (ctx) => {
-          console.log("Failed signed in with Google");
-          setIsLoading(false);
-          errorRef.current = ctx.error.message!!;
-        },
-        onSuccess: async (ctx) => {
-          try {
-            console.log("Google auth success context:", ctx);
-            const userId = ctx?.data?.user?.id;
-            if (userId) {
-              handleRevenueCatLogin(userId);
-            }
-          } catch (error) {
-            console.error("Error during post-Google-login processing:", error);
-          } finally {
-            setIsLoading(false);
-          }
-        }
-      });
-    } catch (error: any) {
-      if (error.code === 'ERR_REQUEST_CANCELED') {
-        Alert.alert("Google Sign In Cancelled", "Please try again");
-      } else {
-        throw new Error(error);
-      }
-    }
+    // Prompt the user to sign in
+    // The useEffect hook above will handle the response
+    setIsLoading(true);
+    errorRef.current = null;
+    await promptAsync(); 
   };
 
   return (

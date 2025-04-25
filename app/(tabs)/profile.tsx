@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Alert, Modal } from 'react-native';
-import { LogOut, Palette, X, ChevronUp, ChevronDown } from 'lucide-react-native';
-import { authClient } from "@/stores/auth";
+import { View, StyleSheet, Alert, Modal, Image, Pressable, Platform } from 'react-native';
+import { LogOut, Palette, X, ChevronUp, ChevronDown, User, Edit3 } from 'lucide-react-native';
+import { authClient, uploadProfilePicture } from "@/stores/auth";
 import { useCredits } from '@/hooks/useCredits';
 import { router } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
+
 import { 
   Text, 
   Button, 
@@ -14,7 +16,8 @@ import {
   Avatar, 
   Spinner, 
   ScrollView,
-  H4
+  H4,
+  useTheme
 } from 'tamagui';
 import { useAppTheme } from '@/context/ThemeProvider';
 import ThemeSelector from '@/components/ThemeSelector';
@@ -22,12 +25,18 @@ import InfoItem from '@/components/InfoItem';
 import CreditItem from '@/components/CreditItem';
 
 export default function ProfileScreen() {
-  const { data: session } = authClient.useSession();
+  const { data: session, isPending } = authClient.useSession();
   const { history: creditHistory, isLoading: isCreditsLoading, creditsBalance } = useCredits();
   const { getCurrentTheme, activeThemeVariant } = useAppTheme();
+  const tamaguiTheme = useTheme();
   const theme = getCurrentTheme();
   const [isCreditsExpanded, setIsCreditsExpanded] = useState(false);
   const [showThemeModal, setShowThemeModal] = useState(false);
+  const [isImageOverlayVisible, setIsImageOverlayVisible] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const profileImageUri = session?.user?.image;
+  const canEditProfilePicture = profileImageUri?.startsWith('data:image/') ?? true;
 
   const handleLogout = async () => {
     try {
@@ -43,9 +52,47 @@ export default function ProfileScreen() {
     setIsCreditsExpanded(!isCreditsExpanded);
   };
 
+  const handleEditProfilePicture = async () => {
+    setIsImageOverlayVisible(false);
+    if (Platform.OS !== 'web') {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Camera roll permissions are needed to change the profile picture.');
+        return;
+      }
+    }
+
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const asset = result.assets[0];
+      setIsUploading(true);
+      try {
+        await uploadProfilePicture(asset);
+      } catch (error: any) {
+        Alert.alert('Upload Failed', error.message || 'Could not update profile picture.');
+      } finally {
+        setIsUploading(false);
+      }
+    }
+  };
+
   const visibleTransactions = isCreditsExpanded 
     ? creditHistory 
     : creditHistory.slice(0, 3);
+
+  if (isPending) {
+    return (
+      <View style={[styles.container, styles.centerContainer, { backgroundColor: theme.screenBackground }]}>
+        <Spinner size="large" color={theme.tint} />
+      </View>
+    );
+  }
 
   return (
     <>
@@ -63,10 +110,15 @@ export default function ProfileScreen() {
           borderColor={theme.cardBorder}
         >
           <XStack space="$3" alignItems="center">
-            <Avatar circular size="$6">
-              <Avatar.Image source={{ uri: 'https://i.pravatar.cc/300' }} />
-              <Avatar.Fallback backgroundColor={theme.tint} />
-            </Avatar>
+            <Pressable onPress={() => profileImageUri ? setIsImageOverlayVisible(true) : handleEditProfilePicture()}>
+              <Avatar circular size="$6" backgroundColor={tamaguiTheme?.color5?.val ?? '#ccc'}>
+                {profileImageUri ? (
+                  <Avatar.Image source={{ uri: profileImageUri }} />
+                ) : (
+                  <User size={30} color={tamaguiTheme?.color10?.val ?? '#555'} />
+                )}
+              </Avatar>
+            </Pressable>
             <YStack flex={1}>
               <Text 
                 fontSize="$4" 
@@ -76,7 +128,8 @@ export default function ProfileScreen() {
                 {session?.user?.name}
               </Text>
               <Text 
-                fontSize="$2" 
+                fontSize="$4"
+                marginTop="$2"
                 color={theme.text.secondary}
               >
                 {session?.user?.email}
@@ -207,8 +260,59 @@ export default function ProfileScreen() {
               icon={<View style={{ width: 18 }} />}
             />
           </YStack>
+          <View style={styles.footer}>
+            <Text color={theme.text.primary} style={[styles.footerText]}>© 2024 Toonify. All rights reserved.</Text>
+          </View>
         </YStack>
       </ScrollView>
+
+      <Modal
+        visible={isImageOverlayVisible}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setIsImageOverlayVisible(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setIsImageOverlayVisible(false)}>
+          <Pressable onPress={(e) => e.stopPropagation()}>
+            <View style={[styles.imageModalContent, { backgroundColor: theme.card }]}>
+              {profileImageUri && (
+                <Image 
+                  source={{ uri: profileImageUri }} 
+                  style={styles.fullImage} 
+                  resizeMode="contain" 
+                />
+              )}
+              <XStack position="absolute" top="$3" right="$3">
+                 <Button 
+                    chromeless
+                    circular 
+                    backgroundColor="$backgroundStrong"
+                    onPress={() => setIsImageOverlayVisible(false)} 
+                    icon={<X size={20} color={theme.text.primary} />}
+                    size="$3"
+                  />
+              </XStack>
+              {canEditProfilePicture && (
+                <Button
+                  icon={isUploading ? <Spinner color={theme.text.primary}/> : <Edit3 size={18} color={theme.text.primary} />}
+                  onPress={handleEditProfilePicture}
+                  disabled={isUploading}
+                  marginBottom="$1"
+                  theme="alt1"
+                  size="$3"
+                  backgroundColor={theme.card}
+                  fontWeight="bold"
+                  borderColor={theme.cardBorder}
+                  borderWidth={1}
+                  color={theme.text.primary}
+                >
+                  {isUploading ? 'Uploading...' : 'Edit Photo'}
+                </Button>
+              )}
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       <Modal
         visible={showThemeModal}
@@ -228,8 +332,8 @@ export default function ProfileScreen() {
               />
             </XStack>
             <ThemeSelector onClose={() => setShowThemeModal(false)} />
-      </View>
-    </View>
+          </View>
+        </View>
       </Modal>
     </>
   );
@@ -238,6 +342,11 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   modalContainer: {
     flex: 1,
@@ -255,5 +364,33 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
-  }
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  imageModalContent: {
+    width: '95%',
+    maxWidth: 500,
+    padding: 15,
+    borderRadius: 15,
+    alignItems: 'center',
+    position: 'relative',
+  },
+  fullImage: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  footer: {
+    marginTop: 60,
+    alignItems: 'center',
+  },
+  footerText: {
+    fontSize: 12,
+  },
 });

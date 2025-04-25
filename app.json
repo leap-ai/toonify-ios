@@ -14,7 +14,14 @@
       "bundleIdentifier": "com.leapai.toonify",
       "infoPlist": {
         "NSUserTrackingUsageDescription": "We use this to offer personalized pricing",
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "com.googleusercontent.apps.751659734273-j9q11n2ihah1cqa7v5nbr6elbckam3g4"
+            ]
+          }
+        ]
       }
     },
     "web": {
