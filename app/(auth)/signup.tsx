@@ -1,7 +1,7 @@
-import React, { useState, useRef } from 'react';
-import { StyleSheet, Image, useColorScheme, View, Pressable, Platform, Alert } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { StyleSheet, Image, View, Pressable, Platform, Alert } from 'react-native';
 import { Link, router } from 'expo-router';
-import { UserPlus, ImagePlus, User } from 'lucide-react-native';
+import { UserPlus, User } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { authClient } from '@/stores/auth';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,8 +13,9 @@ import {
   XStack, 
   Card,
   Spinner,
-  useTheme
+  H5,
 } from 'tamagui';
+import { useAppTheme } from '@/context/ThemeProvider';
 
 export default function SignupScreen() {
   const [name, setName] = useState('');
@@ -23,9 +24,13 @@ export default function SignupScreen() {
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const errorRef = useRef<string | null>(null);
-  const theme = useTheme();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const { getCurrentTheme, isDarkMode } = useAppTheme();
+  const theme = getCurrentTheme();
+
+  useEffect(() => {
+    setErrorMessage(errorRef.current);
+  }, [errorRef.current]);
 
   const pickImage = async () => {
     if (Platform.OS !== 'web') {
@@ -49,11 +54,15 @@ export default function SignupScreen() {
         const mimeType = asset.mimeType ?? 'image/jpeg';
         const dataUri = `data:${mimeType};base64,${asset.base64}`;
         setImageUri(dataUri);
+    } else if (!result.canceled) {
+        console.warn("Image picker result did not contain base64 data.");
+        Alert.alert("Image Error", "Could not process the selected image. Please try a different one.");
     }
   };
 
   const handleSignup = async () => {
     errorRef.current = null; 
+    setErrorMessage(null);
 
     const payload: any = {
       email,
@@ -71,8 +80,7 @@ export default function SignupScreen() {
       },
       onError: (ctx) => {
         setIsLoading(false);
-        errorRef.current = ctx.error?.message ?? 'An unknown error occurred.'; 
-        setName(name => name); 
+        errorRef.current = ctx.error?.message ?? 'An unknown error occurred during sign up.'; 
       },
       onSuccess: () => {
         setIsLoading(false);
@@ -81,38 +89,58 @@ export default function SignupScreen() {
   };
 
   const navigateToLogin = () => {
-    router.push({
-      pathname: '/(auth)/login',
-      params: { animation: 'slide_from_left' }
-    });
+    router.push('/(auth)/login');
   };
 
+  const dynamicStyles = StyleSheet.create({
+    imagePicker: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        justifyContent: 'center',
+        alignItems: 'center',
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: theme.separator,
+        backgroundColor: theme.card,
+      },
+      profileImage: {
+        width: '100%',
+        height: '100%',
+      },
+  });
+
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? '#121212' : '#fff' }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <YStack space="$4" padding="$4" justifyContent="center" flex={1}>
         <YStack space="$2" alignItems="center" marginBottom="$4">
-          <Text fontSize="$6" fontWeight="bold" color={isDark ? '#FFFFFF' : '#333333'}>
+          <Image 
+            source={require('@/assets/images/logo.png')} 
+            style={styles.logo}
+            resizeMode="cover"
+          />
+          <Text fontSize="$6" fontWeight="bold" color={theme.text.primary}>
             Create Account
           </Text>
-          <Text fontSize="$3" color={isDark ? '#BBBBBB' : '#666666'}>
+          <Text fontSize="$3" color={theme.text.secondary}>
             Sign up to start creating cartoons
           </Text>
         </YStack>
         
         <YStack alignItems="center" marginBottom="$4">
-          <Pressable onPress={pickImage} style={[styles.imagePicker, { backgroundColor: isDark ? theme.gray5.val : theme.gray5.val }]}>
+          <Pressable onPress={pickImage} style={dynamicStyles.imagePicker}>
             {imageUri ? (
-              <Image source={{ uri: imageUri }} style={styles.profileImage} />
+              <Image source={{ uri: imageUri }} style={dynamicStyles.profileImage} />
             ) : (
-              <User size={40} color={isDark ? theme.gray10.val : theme.gray10.val} /> 
+              <User size={40} color={theme.text.tertiary} /> 
             )}
           </Pressable>
-          <Text fontSize="$4" color={isDark ? theme.gray11.val : theme.gray11.val} marginTop="$2">
+          <Text fontSize="$4" color={theme.text.secondary} marginTop="$2">
              {imageUri ? 'Change Photo' : 'Add Profile Photo'}
           </Text>
         </YStack>
         
-        <Card elevate bordered padding="$4" marginBottom="$2" backgroundColor={isDark ? '#1E1E1E' : '#F5F5F5'}>
+        <Card elevate bordered padding="$4" marginBottom="$2" backgroundColor={theme.card} borderColor={theme.cardBorder}>
           <YStack space="$4">
             <Input
               placeholder="Enter your full name"
@@ -120,10 +148,10 @@ export default function SignupScreen() {
               value={name}
               onChangeText={setName}
               size="$4"
-              backgroundColor={isDark ? '#2A2A2A' : '#FFFFFF'}
-              color={isDark ? '#FFFFFF' : '#333333'}
-              placeholderTextColor={isDark ? '#AAAAAA' : '#999999'}
-              borderColor={isDark ? '#444444' : '#CCCCCC'}
+              backgroundColor={theme.background}
+              color={theme.text.primary}
+              placeholderTextColor={theme.text.tertiary}
+              borderColor={theme.separator}
             />
             <Input
               placeholder="Enter your email"
@@ -132,10 +160,10 @@ export default function SignupScreen() {
               value={email}
               onChangeText={setEmail}
               size="$4"
-              backgroundColor={isDark ? '#2A2A2A' : '#FFFFFF'}
-              color={isDark ? '#FFFFFF' : '#333333'}
-              placeholderTextColor={isDark ? '#AAAAAA' : '#999999'}
-              borderColor={isDark ? '#444444' : '#CCCCCC'}
+              backgroundColor={theme.background}
+              color={theme.text.primary}
+              placeholderTextColor={theme.text.tertiary}
+              borderColor={theme.separator}
             />
             <Input
               placeholder="Create your password"
@@ -143,42 +171,48 @@ export default function SignupScreen() {
               value={password}
               onChangeText={setPassword}
               size="$4"
-              backgroundColor={isDark ? '#2A2A2A' : '#FFFFFF'}
-              color={isDark ? '#FFFFFF' : '#333333'}
-              placeholderTextColor={isDark ? '#AAAAAA' : '#999999'}
-              borderColor={isDark ? '#444444' : '#CCCCCC'}
+              backgroundColor={theme.background}
+              color={theme.text.primary}
+              placeholderTextColor={theme.text.tertiary}
+              borderColor={theme.separator}
             />
 
             <Button
-              themeInverse
+              theme="active"
               size="$4"
               onPress={handleSignup}
               disabled={isLoading}
               fontWeight="bold"
-              icon={isLoading ? undefined : <UserPlus size={18} color={isDark ? '#FFFFFF' : '#FFFFFF'} />}
-              backgroundColor="#007AFF"
-              color="#FFFFFF"
+              icon={isLoading ? undefined : <UserPlus size={18} />}
             >
               {isLoading ? (
                 <XStack space="$2" alignItems="center">
-                  <Spinner size="small" color="#FFFFFF" />
-                  <Text color="#FFFFFF">Creating Account...</Text>
+                  <Spinner size="small" />
+                  <Text>Creating Account...</Text>
                 </XStack>
               ) : (
-                <Text color="#FFFFFF">Create Account</Text>
+                <Text>Create Account</Text>
               )}
             </Button>
           </YStack>
         </Card>
 
-        {errorRef.current && (
-          <Text color="$red10" textAlign="center" marginTop="$2">{errorRef.current}</Text>
+        {errorMessage && (
+          <H5 color={theme.text.error} textAlign="center" marginTop="$2">
+            {errorMessage}
+          </H5>
         )}
         <XStack space="$2" justifyContent="center" marginTop="$6">
-          <Text color={isDark ? '#FFFFFF' : '#333333'}>Already have an account?</Text>
-          <Pressable onPress={navigateToLogin}>
-            <Text color="#007AFF" fontWeight="bold">Sign In</Text>
-          </Pressable>
+          <Text color={theme.text.secondary} paddingTop="$1">Already have an account?</Text>
+          <Button 
+            unstyled 
+            pressStyle={{ opacity: 0.7 }}
+            onPress={navigateToLogin}
+            color={theme.text.accent}
+            fontWeight="bold"
+           >
+            Sign In
+          </Button>
         </XStack>
       </YStack>
     </SafeAreaView>
@@ -186,22 +220,12 @@ export default function SignupScreen() {
 }
 
 const styles = StyleSheet.create({
+  logo: {
+    width: 48,
+    height: 48,
+  },
   container: {
     flex: 1,
-  },
-  imagePicker: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#cccccc',
-  },
-  profileImage: {
-    width: '100%',
-    height: '100%',
   },
 });
 

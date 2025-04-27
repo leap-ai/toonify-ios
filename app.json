@@ -4,10 +4,15 @@
     "slug": "toonify",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.jpg",
+    "icon": "./assets/images/logo.png",
     "scheme": "toonify",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1C1917"
+    },
     "ios": {
       "usesAppleSignIn": true,
       "supportsTablet": true,

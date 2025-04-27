@@ -1,111 +1,133 @@
 import React from 'react';
-import { Alert } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import { useRouter } from 'expo-router';
-import { useGenerationStore } from '../stores/generation';
-import { 
-  Text, 
-  Button, 
-  Spinner, 
-  XStack, 
-  Card,
-  H3,
-  YStack
-} from 'tamagui';
+import { View, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { Card, H3, Text, YStack, Button, Spinner } from 'tamagui';
 import { useAppTheme } from '@/context/ThemeProvider';
+import { LogOut } from 'lucide-react-native';
 
-interface CreateCardProps {
-  error?: string | null;
-  onErrorChange?: (error: string | null) => void;
+export interface CreateCardProps {
+  error: string | null;
+  selectedImage: string | null;
+  isLoading: boolean;
+  onPickImage: () => Promise<void>;
+  onGenerate: () => Promise<void>;
 }
 
-const CreateCard: React.FC<CreateCardProps> = ({ 
-  error, 
-  onErrorChange = () => {} 
-}) => {
-  const router = useRouter();
-  const { generateImage, isLoading } = useGenerationStore();
+export default function CreateCard({
+  error,
+  selectedImage,
+  isLoading,
+  onPickImage,
+  onGenerate,
+}: CreateCardProps) {
   const { getCurrentTheme } = useAppTheme();
   const theme = getCurrentTheme();
 
-  const pickImage = async () => {
-    try {
-      onErrorChange(null);
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 1,
-      });
-
-      if (!result.canceled) {
-        await generateImage(result.assets[0].uri);
-        router.push('/(tabs)/history');
-      }
-    } catch (err) {
-      console.error('Error picking image:', err);
-      const errorMessage = 'Failed to pick image. Please try again.';
-      onErrorChange(errorMessage);
-      Alert.alert('Error', errorMessage);
-    }
-  };
-
   return (
     <Card 
-      elevate 
-      padding="$5" 
-      margin="$4" 
+      elevate
+      size="$4" 
       bordered
-      backgroundColor={theme.card}
-      borderColor={theme.cardBorder}
+      style={[
+        styles.card, 
+        { backgroundColor: theme.card }
+      ]}
     >
-      <YStack space="$3" alignItems="center">
-        <H3 
-          color={theme.text.primary} 
-          fontWeight="bold" 
-          textAlign="center"
-        >
-          Create Your Cartoon
-        </H3>
-        
-        <Text 
-          fontSize="$3" 
-          color={theme.text.secondary} 
-          textAlign="center" 
-          lineHeight={20}
-        >
-          Upload a photo to transform it into a cartoon
-        </Text>
-        
-        <Button
-          size="$6"
-          themeInverse
-          onPress={pickImage}
-          disabled={isLoading}
-          width="100%"
-          marginTop="$3"
-          fontWeight="bold"
-          backgroundColor={theme.tint}
-          color={theme.background}
-        >
-          {isLoading ? (
-            <XStack space="$2" alignItems="center">
-              <Spinner size="small" color={theme.background} />
-              <Text color={theme.background}>Processing...</Text>
-            </XStack>
+      <Card.Header padded alignItems="center">
+        <H3 style={{ color: theme.text.primary }}>Turn into Toon!</H3>
+      </Card.Header>
+      <YStack space="$2" p="$3">
+        <View style={styles.imageContainer}>
+          {selectedImage ? (
+            <Image source={{ uri: selectedImage }} style={styles.image} />
           ) : (
-            "Upload Photo"
+            <TouchableOpacity 
+              style={[
+                styles.uploadBox, 
+                { 
+                  backgroundColor: theme.card,
+                  borderColor: theme.cardBorder 
+                }
+              ]}
+              onPress={onPickImage}
+              activeOpacity={0.7}
+            >
+              {/* <FA name="upload" size={100} color={theme.text.secondary} /> */}
+              <Text 
+                style={[
+                  styles.uploadText,
+                  { color: theme.text.secondary }
+                ]}
+              >
+                Tap to select an image
+              </Text>
+            </TouchableOpacity>
           )}
-        </Button>
+        </View>
         
-        {error && (
-          <Text color={theme.text.error} marginTop="$2">
-            {error}
-          </Text>
-        )}
+        <YStack space="$2">
+          <Button
+            size="$4"
+            backgroundColor={theme.text.accent}
+            color={theme.text.primary}
+            onPress={onGenerate}
+            style={styles.button}
+            disabled={!selectedImage || isLoading}
+          >
+            {isLoading ? (
+              <YStack space="$1" alignItems="center" flexDirection="row">
+                <Spinner color="white" />
+                <Text style={{ color: 'white', marginLeft: 10 }}>
+                  Generating Cartoon...
+                </Text>
+              </YStack>
+            ) : (
+              <Text style={{ color: 'white' }}>Generate Cartoon</Text>
+            )}
+          </Button>
+          
+          {error ? (
+            <Text style={[styles.errorText, { color: theme.text.error }]}>
+              {error}
+            </Text>
+          ) : null}
+        </YStack>
       </YStack>
     </Card>
   );
-};
+}
 
-export default CreateCard; 
+const styles = StyleSheet.create({
+  card: {
+    margin: 15,
+  },
+  imageContainer: {
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  uploadBox: {
+    width: 300,
+    height: 300,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  uploadText: {
+    marginTop: 10,
+    fontSize: 16,
+  },
+  image: {
+    width: 300,
+    height: 300,
+    borderRadius: 8,
+  },
+  button: {
+    height: 50,
+    justifyContent: 'center',
+  },
+  errorText: {
+    marginTop: 10,
+    textAlign: 'center',
+  }
+}); 

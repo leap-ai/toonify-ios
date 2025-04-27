@@ -3,6 +3,7 @@ import { Text, XStack, Card } from 'tamagui';
 import { useAppTheme } from '@/context/ThemeProvider';
 import { useProductMetadataContext } from '@/context/ProductMetadataProvider';
 import { CreditTransaction } from '@/types';
+import { formatRelativeDate } from '@/utils/dateUtils';
 
 interface CreditItemProps {
   item: CreditTransaction;
@@ -27,35 +28,6 @@ const CreditItem: React.FC<CreditItemProps> = ({ item }) => {
     return 'External Payment';
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-    const diffMinutes = Math.floor(diffTime / (1000 * 60));
-  
-    if (diffDays === 0) {
-      if (diffHours === 0) {
-        if (diffMinutes < 1) {
-          return 'Just now';
-        }
-        return `${diffMinutes} minutes ago`;
-      }
-      return `${diffHours} hours ago`;
-    } else if (diffDays === 1) {
-      return 'Yesterday';
-    } else if (diffDays < 7) {
-      return `${diffDays} days ago`;
-    } else {
-      return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      });
-    }
-  };
-
   return (
     <Card 
       marginVertical="$1" 
@@ -73,8 +45,8 @@ const CreditItem: React.FC<CreditItemProps> = ({ item }) => {
           {item.amount > 0 ? '+' : ''}{item.amount} {item.currency}
         </Text>
       </XStack>
-      <Text fontSize="$2" color={theme.text.secondary} marginTop="$1">
-        {formatDate(item.createdAt)}
+      <Text fontSize="$3" color={theme.text.secondary} marginTop="$1">
+        {formatRelativeDate(item.createdAt)}
       </Text>
     </Card>
   );

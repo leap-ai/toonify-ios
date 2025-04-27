@@ -30,11 +30,11 @@ export const ImageModal = ({ imageUrl, isVisible, onClose }: ImageModalProps) =>
       onRequestClose={onClose}
     >
       <TouchableWithoutFeedback onPress={onClose}>
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContainer, { backgroundColor: theme.overlayBackground }]}>
           <Button 
-            icon={<X size={24} color="#fff" />}
+            icon={<X size={24} color={theme.text.primary} />}
             onPress={onClose}
-            backgroundColor="rgba(30, 30, 30, 0.7)"
+            backgroundColor="$backgroundStrong"
             position="absolute"
             top={40}
             right={20}
@@ -71,7 +71,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.95)',
   },
   spinnerContainer: {
     position: 'absolute',

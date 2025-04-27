@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useColorScheme, ColorSchemeName } from 'react-native';
-import { Theme } from 'tamagui';
+import { useColorScheme, ColorSchemeName, View, ActivityIndicator } from 'react-native';
+import { Theme, ThemeName } from 'tamagui';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as SecureStore from 'expo-secure-store';
 
 // Define theme interfaces
 export interface ThemeColors {
@@ -16,12 +17,15 @@ export interface ThemeColors {
     accent: string;
     error: string;
     success: string;
+    shadowLight: string;
+    shadowDark: string;
   };
   headerBackground: string;
   tabBarBackground: string;
   tabBarBorder: string;
   separator: string;
   screenBackground: string;
+  overlayBackground: string;
 }
 
 export interface GradientConfig {
@@ -70,12 +74,15 @@ export const themeVariants: ThemeVariant[] = [
           accent: '#007AFF',
           error: '#FF3B30',
           success: '#34C759',
+          shadowLight: 'rgba(0, 0, 0, 0.1)',
+          shadowDark: 'rgba(0, 0, 0, 0.3)',
         },
         headerBackground: '#FFFFFF',
         tabBarBackground: '#FFFFFF',
         tabBarBorder: '#E5E5E5',
         separator: '#E5E5E5',
         screenBackground: '#F9F9F9',
+        overlayBackground: 'rgba(0, 0, 0, 0.6)',
       },
       dark: {
         tint: '#0A84FF',
@@ -89,12 +96,15 @@ export const themeVariants: ThemeVariant[] = [
           accent: '#0A84FF',
           error: '#FF453A',
           success: '#30D158',
+          shadowLight: 'rgba(0, 0, 0, 0.1)',
+          shadowDark: 'rgba(0, 0, 0, 0.3)',
         },
         headerBackground: '#1A1A1A',
         tabBarBackground: '#1A1A1A',
         tabBarBorder: '#333333',
         separator: '#333333',
         screenBackground: '#121212',
+        overlayBackground: 'rgba(0, 0, 0, 0.8)',
       },
     },
     fonts: {
@@ -136,12 +146,15 @@ export const themeVariants: ThemeVariant[] = [
           accent: '#9D50BB',
           error: '#E02020',
           success: '#28C76F',
+          shadowLight: 'rgba(0, 0, 0, 0.1)',
+          shadowDark: 'rgba(0, 0, 0, 0.3)',
         },
         headerBackground: '#FFFFFF',
         tabBarBackground: '#FFFFFF',
         tabBarBorder: '#EFEFEF',
         separator: '#EFEFEF',
         screenBackground: '#FCFAFF',
+        overlayBackground: 'rgba(40, 20, 60, 0.6)',
       },
       dark: {
         tint: '#A55EEA',
@@ -155,12 +168,15 @@ export const themeVariants: ThemeVariant[] = [
           accent: '#A55EEA',
           error: '#FF6B6B',
           success: '#39DA8A',
+          shadowLight: 'rgba(0, 0, 0, 0.1)',
+          shadowDark: 'rgba(0, 0, 0, 0.3)',
         },
         headerBackground: '#1E1930',
         tabBarBackground: '#1E1930',
         tabBarBorder: '#392D4D',
         separator: '#392D4D',
         screenBackground: '#121212',
+        overlayBackground: 'rgba(20, 10, 30, 0.8)',
       },
     },
     fonts: {
@@ -202,12 +218,15 @@ export const themeVariants: ThemeVariant[] = [
           accent: '#FF8C00',
           error: '#E54D4D',
           success: '#48C774',
+          shadowLight: 'rgba(0, 0, 0, 0.1)',
+          shadowDark: 'rgba(0, 0, 0, 0.3)',
         },
         headerBackground: '#FFFFFF',
         tabBarBackground: '#FFFFFF',
         tabBarBorder: '#EFEFEF',
         separator: '#EFEFEF',
         screenBackground: '#FFFAF5',
+        overlayBackground: 'rgba(60, 30, 10, 0.6)',
       },
       dark: {
         tint: '#FF9F43',
@@ -221,12 +240,15 @@ export const themeVariants: ThemeVariant[] = [
           accent: '#FF9F43',
           error: '#FF6B6B',
           success: '#39DA8A',
+          shadowLight: 'rgba(0, 0, 0, 0.1)',
+          shadowDark: 'rgba(0, 0, 0, 0.3)',
         },
         headerBackground: '#241F1A',
         tabBarBackground: '#241F1A',
         tabBarBorder: '#4D3F33',
         separator: '#4D3F33',
         screenBackground: '#121212',
+        overlayBackground: 'rgba(40, 20, 5, 0.8)',
       },
     },
     fonts: {
@@ -268,12 +290,15 @@ export const themeVariants: ThemeVariant[] = [
           accent: '#00B4D8',
           error: '#EF4444',
           success: '#10B981',
+          shadowLight: 'rgba(0, 0, 0, 0.1)',
+          shadowDark: 'rgba(0, 0, 0, 0.3)',
         },
         headerBackground: '#FFFFFF',
         tabBarBackground: '#FFFFFF',
         tabBarBorder: '#EFEFEF',
         separator: '#EFEFEF',
         screenBackground: '#F7FCFD',
+        overlayBackground: 'rgba(10, 40, 60, 0.6)',
       },
       dark: {
         tint: '#22D3EE',
@@ -287,12 +312,15 @@ export const themeVariants: ThemeVariant[] = [
           accent: '#22D3EE',
           error: '#F87171',
           success: '#34D399',
+          shadowLight: 'rgba(0, 0, 0, 0.1)',
+          shadowDark: 'rgba(0, 0, 0, 0.3)',
         },
         headerBackground: '#162229',
         tabBarBackground: '#162229',
         tabBarBorder: '#2D4652',
         separator: '#2D4652',
         screenBackground: '#121212',
+        overlayBackground: 'rgba(5, 20, 30, 0.8)',
       },
     },
     fonts: {
@@ -320,7 +348,11 @@ export const themeVariants: ThemeVariant[] = [
   },
 ];
 
-// Theme Context
+// --- Storage Key ---
+const THEME_STORAGE_KEY = 'app_theme_preference_key';
+const DEFAULT_THEME_ID = 'default'; // ID for "Classic Blue"
+
+// Define the context type
 interface ThemeContextType {
   activeThemeVariant: ThemeVariant;
   isDarkMode: boolean;
@@ -330,31 +362,64 @@ interface ThemeContextType {
   getPrimaryGradient: (props?: any) => React.ReactNode;
   getSecondaryGradient: (props?: any) => React.ReactNode;
   getCardGradient: (props?: any) => React.ReactNode;
+  isThemeLoaded: boolean; // Add loading state to context
 }
 
+// Create the context
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 // Theme Provider Component
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const systemColorScheme = useColorScheme();
-  const [activeThemeVariantId, setActiveThemeVariantId] = useState('default');
   const [isDarkMode, setIsDarkMode] = useState(systemColorScheme === 'dark');
+  const [activeThemeVariant, _setActiveThemeVariant] = useState<ThemeVariant>(themeVariants.find(t => t.id === DEFAULT_THEME_ID) || themeVariants[0]); // Initial default
+  const [isThemeLoaded, setIsThemeLoaded] = useState(false); // Loading state
 
-  const activeThemeVariant = themeVariants.find(theme => theme.id === activeThemeVariantId) || themeVariants[0];
-
+  // Handle system color scheme changes
   useEffect(() => {
     setIsDarkMode(systemColorScheme === 'dark');
   }, [systemColorScheme]);
 
-  const setActiveThemeVariant = (themeId: string) => {
-    const themeExists = themeVariants.some(theme => theme.id === themeId);
-    if (themeExists) {
-      setActiveThemeVariantId(themeId);
+  // Load theme preference on mount
+  useEffect(() => {
+    const loadThemePreference = async () => {
+      try {
+        const savedThemeId = await SecureStore.getItemAsync(THEME_STORAGE_KEY);
+        const initialThemeId = savedThemeId || DEFAULT_THEME_ID;
+        const theme = themeVariants.find(t => t.id === initialThemeId) || themeVariants.find(t => t.id === DEFAULT_THEME_ID) || themeVariants[0];
+        _setActiveThemeVariant(theme);
+      } catch (error) {
+        console.error("Failed to load theme preference:", error);
+        // Fallback to default if loading fails
+        const theme = themeVariants.find(t => t.id === DEFAULT_THEME_ID) || themeVariants[0];
+        _setActiveThemeVariant(theme);
+      } finally {
+        setIsThemeLoaded(true);
+      }
+    };
+
+    loadThemePreference();
+  }, []); // Empty dependency array ensures this runs only once on mount
+
+  // Function to set the active theme variant AND save preference
+  const setActiveThemeVariant = async (themeId: string) => {
+    const newTheme = themeVariants.find(t => t.id === themeId);
+    if (newTheme) {
+      _setActiveThemeVariant(newTheme);
+      try {
+        await SecureStore.setItemAsync(THEME_STORAGE_KEY, themeId);
+      } catch (error) {
+        console.error("Failed to save theme preference:", error);
+        // Handle saving error if needed (e.g., show a message)
+      }
+    } else {
+        console.warn(`Theme with id "${themeId}" not found.`);
     }
   };
 
+  // Function to get the current theme colors based on mode
   const getCurrentTheme = (): ThemeColors => {
-    return isDarkMode ? activeThemeVariant.colors.dark : activeThemeVariant.colors.light;
+    return activeThemeVariant.colors[isDarkMode ? 'dark' : 'light'];
   };
 
   const getPrimaryGradient = (props: any = {}) => {
@@ -393,29 +458,40 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
   };
 
-  const value: ThemeContextType = {
+  // Render loading state until theme is loaded from storage
+  if (!isThemeLoaded) {
+    // You can customize this loading state
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: systemColorScheme === 'dark' ? '#121212' : '#FFFFFF' }}>
+        <ActivityIndicator size="large" color={systemColorScheme === 'dark' ? '#FFFFFF' : '#000000'} />
+      </View>
+    );
+  }
+
+  // Provide the context value
+  const contextValue: ThemeContextType = {
     activeThemeVariant,
     isDarkMode,
     systemColorScheme,
-    setActiveThemeVariant,
+    setActiveThemeVariant, // Expose the updated function
     getCurrentTheme,
     getPrimaryGradient,
     getSecondaryGradient,
     getCardGradient,
+    isThemeLoaded, // Expose loading state
   };
 
-  const tamaguiTheme = isDarkMode ? 'dark' : 'light';
-
   return (
-    <ThemeContext.Provider value={value}>
-      <Theme name={tamaguiTheme}>
+    <ThemeContext.Provider value={contextValue}>
+      {/* Apply Tamagui theme based on active variant, casting to ThemeName */}
+      <Theme name={(isDarkMode ? `${activeThemeVariant.id}_dark` : `${activeThemeVariant.id}_light`) as ThemeName}>
         {children}
       </Theme>
     </ThemeContext.Provider>
   );
 };
 
-// Custom hook to use theme
+// Custom hook to use the theme context
 export const useAppTheme = () => {
   const context = useContext(ThemeContext);
   if (context === undefined) {
@@ -424,5 +500,5 @@ export const useAppTheme = () => {
   return context;
 };
 
-// Export the theme variants directly
+// Function to get all theme variants (unchanged)
 export const getThemeVariants = () => themeVariants; 

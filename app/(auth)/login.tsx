@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import * as AppleAuthentication from 'expo-apple-authentication';
-import { View, StyleSheet, Alert, Image, useColorScheme, Pressable } from 'react-native';
+import { View, StyleSheet, Alert, Image, Pressable } from 'react-native';
 import { Link, router } from 'expo-router';
 import { authClient } from '../../stores/auth';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,14 +13,11 @@ import {
   YStack, 
   Separator, 
   Card,
-  useTheme
+  H5,
 } from 'tamagui';
+import { useAppTheme } from '@/context/ThemeProvider';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
-
-// Pre-define image sources for easier reference and preloading
-const APPLE_LOGO = "@/assets/images/apple-logo.png";
-const GOOGLE_LOGO = "@/assets/images/google-logo.png";
 
 // Initialize WebBrowser
 WebBrowser.maybeCompleteAuthSession();
@@ -30,25 +27,22 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const errorRef = useRef<string | null>(null);
-  const theme = useTheme();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const { getCurrentTheme, isDarkMode } = useAppTheme();
+  const theme = getCurrentTheme();
 
   // Google Sign In Hook
   const [request, response, promptAsync] = Google.useAuthRequest({
-    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID, // From .env
-    // androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID, // Uncomment if needed
-    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID, // From .env
-    // expoClientId: process.env.EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID // Can often use webClientId here too
+    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
   });
 
-  // Effect to handle Google response
   useEffect(() => {
     if (response?.type === 'success') {
       const { authentication } = response;
       if (authentication?.idToken) {
-        // Now sign in with better-auth using the ID token
         setIsLoading(true);
+        errorRef.current = null;
         authClient.signIn.social({
           provider: "google",
           idToken: { 
@@ -56,8 +50,6 @@ export default function LoginScreen() {
             accessToken: authentication.accessToken
           }
         }, {
-          onRequest: () => {
-          },
           onError: (ctx) => {
             console.error("better-auth Google ID Token sign-in failed:", ctx.error);
             errorRef.current = ctx.error.message || "Google sign-in failed during backend verification.";
@@ -73,6 +65,7 @@ export default function LoginScreen() {
         });
       } else {
          console.warn("Google Sign-In success response did not contain ID token.");
+         errorRef.current = "Could not retrieve Google ID token.";
          setIsLoading(false);
       }
     } else if (response?.type === 'error') {
@@ -81,6 +74,7 @@ export default function LoginScreen() {
         setIsLoading(false);
     } else if (response?.type === 'cancel') {
         console.log("Google Sign-In cancelled by user.");
+        errorRef.current = null;
         setIsLoading(false);
     }
   }, [response]);
@@ -117,12 +111,11 @@ export default function LoginScreen() {
       },
       onError: (ctx) => {
         setIsLoading(false);
-        errorRef.current = ctx.error.message!!;
+        errorRef.current = ctx.error.message || "An unknown error occurred.";
       },
       onSuccess: async (ctx) => {
         try {
           const userId = ctx?.data?.user?.id;
-          
           if (userId) {
             await handleRevenueCatLogin(userId);
           } else {
@@ -149,15 +142,10 @@ export default function LoginScreen() {
       });
 
       if (credential.identityToken) {
-        // Now sign in with better-auth using the ID token
         await authClient.signIn.social({
           provider: "apple",
           idToken: { token: credential.identityToken }
         }, {
-          onRequest: () => {
-            console.log("Sending Apple ID Token to better-auth backend...");
-            // Already set isLoading = true
-          },
           onError: (ctx) => {
             console.error("better-auth Apple ID Token sign-in failed:", ctx.error);
             errorRef.current = ctx.error.message || "Apple sign-in failed during backend verification.";
@@ -179,7 +167,7 @@ export default function LoginScreen() {
       setIsLoading(false);
       if (e.code === 'ERR_REQUEST_CANCELED') {
         console.log("Apple Sign-In cancelled by user.");
-        // Maybe set errorRef.current = "Sign-in cancelled.";
+        errorRef.current = null;
       } else {
         console.error("Apple Sign-In Error:", e);
         errorRef.current = e.message || "An unknown error occurred during Apple Sign-In.";
@@ -188,26 +176,35 @@ export default function LoginScreen() {
   };
 
   const signInWithGoogle = async () => {
-    // Prompt the user to sign in
-    // The useEffect hook above will handle the response
     setIsLoading(true);
     errorRef.current = null;
     await promptAsync(); 
   };
 
+  useEffect(() => {
+    if (errorRef.current) {
+      setErrorMessage(errorRef.current);
+    }
+  }, [errorRef.current]);
+
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? '#121212' : '#fff' }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <YStack space="$4" padding="$4" justifyContent="center" flex={1}>
         <YStack space="$2" alignItems="center" marginBottom="$4">
-          <Text fontSize="$6" fontWeight="bold" color={isDark ? '#FFFFFF' : '#333333'}>
+          <Image 
+            source={require('@/assets/images/logo.png')} 
+            style={styles.logo}
+            resizeMode="cover"
+          />
+          <Text fontSize="$6" fontWeight="bold" color={theme.text.primary}>
             Welcome to Toonify
           </Text>
-          <Text fontSize="$3" color={isDark ? '#BBBBBB' : '#666666'}>
+          <Text fontSize="$3" color={theme.text.secondary}>
             Sign in to start creating cartoons
           </Text>
         </YStack>
         
-        <Card elevate bordered padding="$4" marginBottom="$2" backgroundColor={isDark ? '#1E1E1E' : '#F5F5F5'}>
+        <Card elevate bordered padding="$4" marginBottom="$2" backgroundColor={theme.card} borderColor={theme.cardBorder}>
           <YStack space="$4">
             <Input
               placeholder="Enter your email"
@@ -216,10 +213,10 @@ export default function LoginScreen() {
               value={email}
               onChangeText={setEmail}
               size="$4"
-              backgroundColor={isDark ? '#2A2A2A' : '#FFFFFF'}
-              color={isDark ? '#FFFFFF' : '#333333'}
-              placeholderTextColor={isDark ? '#AAAAAA' : '#999999'}
-              borderColor={isDark ? '#444444' : '#CCCCCC'}
+              backgroundColor={theme.background}
+              color={theme.text.primary}
+              placeholderTextColor={theme.text.tertiary}
+              borderColor={theme.separator}
             />
             <Input
               placeholder="Enter your password"
@@ -227,82 +224,90 @@ export default function LoginScreen() {
               value={password}
               onChangeText={setPassword}
               size="$4"
-              backgroundColor={isDark ? '#2A2A2A' : '#FFFFFF'}
-              color={isDark ? '#FFFFFF' : '#333333'}
-              placeholderTextColor={isDark ? '#AAAAAA' : '#999999'}
-              borderColor={isDark ? '#444444' : '#CCCCCC'}
+              backgroundColor={theme.background}
+              color={theme.text.primary}
+              placeholderTextColor={theme.text.tertiary}
+              borderColor={theme.separator}
             />
             
             <Button 
-              themeInverse 
+              theme="active"
               size="$4" 
               onPress={handleEmailLogin}
               disabled={isLoading}
               fontWeight="bold"
-              backgroundColor="#007AFF"
-              color="#FFFFFF"
             >
               Sign In
             </Button>
           </YStack>
         </Card>
 
-        {errorRef.current && (
-          <Text color="#FF3B30" textAlign="center">{errorRef.current}</Text>
+        {errorMessage && (
+          <H5 textAlign="center" color={theme.text.error} marginTop="$2">
+            {errorMessage}
+          </H5>
         )}
 
-        <XStack alignItems="center" justifyContent="center" space="$2" marginVertical="$4">
-          <View style={[styles.separator, { backgroundColor: isDark ? '#444444' : '#DDDDDD' }]} />
-          <Text color={isDark ? '#AAAAAA' : '#999999'}>OR</Text>
-          <View style={[styles.separator, { backgroundColor: isDark ? '#444444' : '#DDDDDD' }]} />
+        <XStack alignItems="center" space="$4" marginTop="$4">
+          <Separator flex={1} borderColor={theme.separator} />
+          <Text color={theme.text.tertiary}>Or sign in with</Text>
+          <Separator flex={1} borderColor={theme.separator} />
         </XStack>
 
-        <XStack justifyContent="center" space="$4">
-          <Button 
-            onPress={signInWithGoogle}
-            disabled={isLoading}
-            backgroundColor={'white'}
-            borderColor={isDark ? 'white' : theme.background.val}
-            borderWidth={isDark ? 1 : 1}
+        <XStack space="$4" marginTop="$4" justifyContent="center">
+          <Button
             size="$8"
+            onPress={signInWithApple}
+            disabled={isLoading}
             circular
-            width={56}
-            height={56}
-            padding={0}
+            backgroundColor={theme.card}
+            borderColor={theme.separator}
+            borderWidth={1}
+            padding="$2"
             icon={
+              isDarkMode ?
               <Image 
-                source={require(GOOGLE_LOGO)} 
-                style={styles.socialIcon} 
+                source={require('@/assets/images/apple-logo-light.png')} 
+                style={styles.socialIcon}
+              /> :
+              <Image 
+                source={require('@/assets/images/apple-logo.png')} 
+                style={styles.socialIcon}
               />
             }
           />
 
-          <Button 
-            onPress={signInWithApple}
-            disabled={isLoading}
-            backgroundColor={'white'}
-            borderColor={isDark ? 'white' : theme.background.val}
-            borderWidth={isDark ? 1 : 1}
+          <Button
             size="$8"
+            onPress={signInWithGoogle}
+            disabled={isLoading || !request}
             circular
-            width={56}
-            height={56}
-            padding={0}
+            backgroundColor={theme.card}
+            borderColor={theme.separator}
+            borderWidth={1}
+            padding="$2"
             icon={
               <Image 
-                source={require(APPLE_LOGO)} 
+                source={require('@/assets/images/google-logo.png')} 
                 style={styles.socialIcon}
               />
             }
           />
         </XStack>
 
-        <XStack space="$2" justifyContent="center" marginTop="$6">
-          <Text color={isDark ? '#FFFFFF' : '#333333'}>Don't have an account?</Text>
-          <Pressable onPress={navigateToSignup}>
-            <Text color="#007AFF" fontWeight="bold">Sign Up</Text>
-          </Pressable>
+        <XStack justifyContent="center" alignItems="center" space="$2" marginTop="$6">
+          <Text color={theme.text.secondary}>Don't have an account?</Text>
+          <Button
+            unstyled
+            pressStyle={{ opacity: 0.7 }}
+            onPress={navigateToSignup}
+            color={theme.tint}
+            fontWeight="bold"
+          >
+            Sign Up
+          </Button>
         </XStack>
+
       </YStack>
     </SafeAreaView>
   );
@@ -313,13 +318,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   socialIcon: {
-    width: 40,
-    height: 40,
-    
+    width: 36,
+    height: 36,
   },
-  separator: {
-    flex: 1,
-    height: 1,
-  }
+  logo: {
+    width: 48,
+    height: 48,
+  },
 });
 

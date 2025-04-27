@@ -11,7 +11,10 @@ export const formatRelativeDate = (dateString: string): string => {
 
   if (diffDays === 0) {
     if (diffHours === 0) {
-      return `${diffMinutes} ${diffMinutes === 1 ? 'minute' : 'minutes'} ago`;
+      if (diffMinutes < 2) {
+        return 'Just now';
+      }
+      return `${diffMinutes} minutes ago`;
     }
     return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
   } else if (diffDays === 1) {

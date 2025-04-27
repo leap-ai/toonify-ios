@@ -17,7 +17,6 @@ import {
   Spinner, 
   ScrollView,
   H4,
-  useTheme
 } from 'tamagui';
 import { useAppTheme } from '@/context/ThemeProvider';
 import ThemeSelector from '@/components/ThemeSelector';
@@ -28,7 +27,6 @@ export default function ProfileScreen() {
   const { data: session, isPending } = authClient.useSession();
   const { history: creditHistory, isLoading: isCreditsLoading, creditsBalance } = useCredits();
   const { getCurrentTheme, activeThemeVariant } = useAppTheme();
-  const tamaguiTheme = useTheme();
   const theme = getCurrentTheme();
   const [isCreditsExpanded, setIsCreditsExpanded] = useState(false);
   const [showThemeModal, setShowThemeModal] = useState(false);
@@ -41,7 +39,7 @@ export default function ProfileScreen() {
   const handleLogout = async () => {
     try {
       await authClient.signOut();
-      router.replace('/login');
+      router.replace('/(auth)');
     } catch (error) {
       console.error('Logout failed:', error);
       Alert.alert('Error', 'Failed to log out. Please try again.');
@@ -98,7 +96,7 @@ export default function ProfileScreen() {
     <>
       <ScrollView 
         style={[styles.container, { backgroundColor: theme.screenBackground }]} 
-        contentContainerStyle={{ padding: 15 }}
+        contentContainerStyle={styles.scrollContentContainer}
       >
         <Card 
           bordered 
@@ -111,11 +109,11 @@ export default function ProfileScreen() {
         >
           <XStack space="$3" alignItems="center">
             <Pressable onPress={() => profileImageUri ? setIsImageOverlayVisible(true) : handleEditProfilePicture()}>
-              <Avatar circular size="$6" backgroundColor={tamaguiTheme?.color5?.val ?? '#ccc'}>
+              <Avatar circular size="$6" backgroundColor={theme.card}>
                 {profileImageUri ? (
                   <Avatar.Image source={{ uri: profileImageUri }} />
                 ) : (
-                  <User size={30} color={tamaguiTheme?.color10?.val ?? '#555'} />
+                  <User size={30} color={theme.text.secondary} />
                 )}
               </Avatar>
             </Pressable>
@@ -244,9 +242,9 @@ export default function ProfileScreen() {
               value={activeThemeVariant.name}
               icon={<Palette size={18} color={theme.tint} />}
             />
-          <InfoItem 
-            title="Privacy Policy" 
-            onPress={() => router.push('/privacy-policy')}
+            <InfoItem 
+              title="Privacy Policy" 
+              onPress={() => router.push('/privacy-policy')}
               icon={<View style={{ width: 18 }} />}
             />
             <InfoItem 
@@ -261,7 +259,7 @@ export default function ProfileScreen() {
             />
           </YStack>
           <View style={styles.footer}>
-            <Text color={theme.text.primary} style={[styles.footerText]}>© 2024 Toonify. All rights reserved.</Text>
+            <Text color={theme.text.secondary} fontSize="$3">© 2024 Toonify. All rights reserved.</Text>
           </View>
         </YStack>
       </ScrollView>
@@ -272,7 +270,7 @@ export default function ProfileScreen() {
         transparent={true}
         onRequestClose={() => setIsImageOverlayVisible(false)}
       >
-        <Pressable style={styles.modalOverlay} onPress={() => setIsImageOverlayVisible(false)}>
+        <Pressable style={[styles.modalOverlay, { backgroundColor: theme.overlayBackground }]} onPress={() => setIsImageOverlayVisible(false)}>
           <Pressable onPress={(e) => e.stopPropagation()}>
             <View style={[styles.imageModalContent, { backgroundColor: theme.card }]}>
               {profileImageUri && (
@@ -320,7 +318,7 @@ export default function ProfileScreen() {
         transparent={true}
         onRequestClose={() => setShowThemeModal(false)}
       >
-        <View style={[styles.modalContainer, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
+        <View style={[styles.modalContainer, { backgroundColor: theme.overlayBackground }]}>
           <View style={[styles.modalContent, { backgroundColor: theme.background }]}>
             <XStack justifyContent="space-between" alignItems="center" marginBottom="$3">
               <H4 color={theme.text.primary}>Theme Settings</H4>
@@ -342,6 +340,9 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  scrollContentContainer: {
+    padding: 15,
   },
   centerContainer: {
     flex: 1,
@@ -367,7 +368,6 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.7)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -389,8 +389,5 @@ const styles = StyleSheet.create({
   footer: {
     marginTop: 60,
     alignItems: 'center',
-  },
-  footerText: {
-    fontSize: 12,
   },
 });

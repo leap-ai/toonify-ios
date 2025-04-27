@@ -16,7 +16,7 @@ const Paywall = () => {
     handleRestoreError,
     handleDismiss
   } = useCredits();
-  const { getCurrentTheme, isDarkMode } = useAppTheme();
+  const { getCurrentTheme } = useAppTheme();
   const theme = getCurrentTheme();
 
   return (
@@ -28,7 +28,7 @@ const Paywall = () => {
           left: 0, 
           right: 0, 
           bottom: 0, 
-          backgroundColor: isDarkMode ? 'rgba(0,0,0,0.7)' : 'rgba(0,0,0,0.5)', 
+          backgroundColor: theme.overlayBackground, 
           justifyContent: 'center', 
           alignItems: 'center',
           zIndex: 1000
@@ -37,7 +37,9 @@ const Paywall = () => {
         </View>
       )}
       <RevenueCatUI.Paywall
-        style={{ flex: 1 }}
+        style={{
+          flex: 1,
+        }}
         onPurchaseStarted={handlePurchaseStarted}
         onPurchaseCompleted={handlePurchaseCompleted}
         onPurchaseCancelled={handlePurchaseCancelled}

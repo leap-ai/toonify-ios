@@ -35,11 +35,9 @@ export const ImageDetailsModal = ({ isVisible, onClose, item }: ImageDetailsModa
   if (!item) return null;
 
   const handleImagePress = (imageUrl: string) => {
-    // Set the full screen image and prevent event propagation
     setFullScreenImage(imageUrl);
   };
 
-  // Handle the modal close
   const handleFullScreenClose = () => {
     setFullScreenImage(null);
   };
@@ -53,7 +51,7 @@ export const ImageDetailsModal = ({ isVisible, onClose, item }: ImageDetailsModa
         onRequestClose={onClose}
       >
         <TouchableOpacity 
-          style={styles.modalOverlay} 
+          style={[styles.modalOverlay, { backgroundColor: theme.overlayBackground }]} 
           activeOpacity={1} 
           onPress={onClose}
         >
@@ -77,7 +75,7 @@ export const ImageDetailsModal = ({ isVisible, onClose, item }: ImageDetailsModa
 
             <XStack justifyContent="space-between" padding="$2" marginTop="$2" flex={1}>
               <YStack alignItems="center" space="$2" flex={1}>
-                <Text color={theme.text.secondary} fontSize="$3" fontWeight="500">Original</Text>
+                <Text color={theme.text.accent} fontSize="$3" fontWeight="500">Original</Text>
                 <TouchableOpacity 
                   style={[styles.imageContainer, { borderColor: theme.cardBorder }]}
                   onPress={() => handleImagePress(item.originalImageUrl)}
@@ -98,7 +96,7 @@ export const ImageDetailsModal = ({ isVisible, onClose, item }: ImageDetailsModa
               </YStack>
               
               <YStack alignItems="center" space="$2" flex={1}>
-                <Text color={theme.text.secondary} fontSize="$3" fontWeight="500">Cartoon</Text>
+                <Text color={theme.text.accent} fontSize="$3" fontWeight="500">Cartoon</Text>
                 <TouchableOpacity 
                   style={[styles.imageContainer, { borderColor: theme.cardBorder }]}
                   onPress={() => handleImagePress(item.cartoonImageUrl)}
@@ -166,17 +164,13 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   modalContent: {
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: -2
-    },
+    shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
