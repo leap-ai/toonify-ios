@@ -16,6 +16,7 @@ interface GenerationState {
   error: string | null;
   generateImage: (imageUrl: string) => Promise<void>;
   fetchGenerations: () => Promise<void>;
+  deleteGeneration: (id: number) => Promise<boolean>;
 }
 
 export const useGenerationStore = create<GenerationState>((set) => ({
@@ -84,4 +85,42 @@ export const useGenerationStore = create<GenerationState>((set) => ({
       set({ isLoading: false });
     }
   },
+
+  deleteGeneration: async (id: number) => {
+    try {
+      set({ isLoading: true, error: null });
+      
+      // Get auth headers
+      const headers = await getAuthHeaders();
+      
+      // Call the delete API
+      await axios.delete(`${API_URL}/api/generation/${id}`, { headers });
+      
+      // Update the local state by removing the deleted generation
+      set((state) => ({
+        generations: state.generations.filter(generation => generation.id !== id)
+      }));
+      
+      console.log('Generation deleted successfully');
+      return true;
+    } catch (error: any) {
+      console.error('Delete generation error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
+      
+      let errorMessage = 'Failed to delete generation';
+      if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      set({ error: errorMessage });
+      return false;
+    } finally {
+      set({ isLoading: false });
+    }
+  }
 })); 
