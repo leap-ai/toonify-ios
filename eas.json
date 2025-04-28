@@ -12,10 +12,24 @@
       "distribution": "internal"
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "ios": {
+        "distribution": "store"
+      },
+      "env": {
+        "API_URL": "https://toonify-backend-node.onrender.com",
+        "BETTER_AUTH_BASE_URL": "https://toonify-backend-node.onrender.com",
+        "REVENUE_CAT_APPLE_API_KEY": "appl_mEdJeGQvIFCopkQijLLHQxBPFzp",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "751659734273-j9q11n2ihah1cqa7v5nbr6elbckam3g4.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "751659734273-j9q11n2ihah1cqa7v5nbr6elbckam3g4.apps.googleusercontent.com"
+      }
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "appleId": "yash@tryleap.ai"
+      }
+    }
   }
 }

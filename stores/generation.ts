@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import axios from 'axios';
-import { API_URL } from '@env';
+import { API_URL } from '@/config';
 import { getAuthHeaders } from '@/utils';
 
 export interface Generation {
