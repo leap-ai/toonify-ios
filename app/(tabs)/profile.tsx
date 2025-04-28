@@ -137,7 +137,7 @@ export default function ProfileScreen() {
               icon={<LogOut size={18} color={theme.text.primary} />}
               onPress={handleLogout}
               size="$3"
-              chromeless
+              backgroundColor={theme.text.error}
               color={theme.text.primary}
             >
               Logout
@@ -249,7 +249,7 @@ export default function ProfileScreen() {
             />
             <InfoItem 
               title="Terms of Service" 
-              onPress={() => {}}
+              onPress={() => router.push('/terms-and-conditions')}
               icon={<View style={{ width: 18 }} />}
             />
             <InfoItem 
