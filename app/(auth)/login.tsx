@@ -4,7 +4,7 @@ import { View, StyleSheet, Alert, Image, Pressable } from 'react-native';
 import { Link, router } from 'expo-router';
 import { authClient } from '../../stores/auth';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Purchases from 'react-native-purchases';
+// import Purchases from 'react-native-purchases';
 import { 
   Text, 
   Button, 
@@ -93,8 +93,8 @@ export default function LoginScreen() {
     }
     try {
       console.log(`Attempting RevenueCat login for user: ${userId}`);
-      const { customerInfo, created } = await Purchases.logIn(userId);
-      console.log(`RevenueCat login successful. Created: ${created}, UserID: ${customerInfo.originalAppUserId}`);
+      // const { customerInfo, created } = await Purchases.logIn(userId);
+      // console.log(`RevenueCat login successful. Created: ${created}, UserID: ${customerInfo.originalAppUserId}`);
     } catch (error) {
       console.error('RevenueCat login failed:', error);
     }

@@ -2,8 +2,8 @@ import React from 'react';
 import { Text, XStack, Card } from 'tamagui';
 import { useAppTheme } from '@/context/ThemeProvider';
 import { useProductMetadataContext } from '@/context/ProductMetadataProvider';
-import { CreditTransaction } from '@/types';
-import { formatRelativeDate } from '@/utils/dateUtils';
+import { CreditTransaction } from '@/utils/types';
+import { formatRelativeDate } from '@/utils/date';
 
 interface CreditItemProps {
   item: CreditTransaction;

@@ -45,9 +45,6 @@
       "package": "com.leapai.toonify"
     },
     "extra": {
-      "router": {
-        "origin": false
-      },
       "eas": {
         "projectId": "1a400000-c128-4cde-b7d3-09ebe2e44450"
       }

@@ -3,7 +3,7 @@ import { View, StyleSheet, Image, Modal, Dimensions, TouchableOpacity, Alert, Pl
 import { Text, XStack, Button, YStack, Spinner } from 'tamagui';
 import { X, Download, Share2, Trash2 } from 'lucide-react-native';
 import { Generation } from './GenerationItem';
-import { formatRelativeDate } from '@/utils/dateUtils';
+import { formatRelativeDate } from '@/utils/date';
 import { useAppTheme } from '@/context/ThemeProvider';
 import { ImageModal } from './ImageModal';
 import * as MediaLibrary from 'expo-media-library';

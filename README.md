@@ -1,134 +1,50 @@
-# Toonify Mobile App
+# Welcome to your Expo app 👋
 
-A React Native mobile application that transforms images into cartoons using AI technology. Built with Expo, React Native, and TypeScript.
+This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
-## Features
+## Get started
 
-- **Image to Video Conversion**: Upload images and convert them into cartoons.
-- **User Authentication**: 
-  - Email/Password login
-  - Google Sign-In
-  - Apple Sign-In
-- **Secure Storage**: Securely store user credentials and tokens
-- **Cross-Platform**: Works on both iOS and Android devices
-- **TypeScript**: Fully typed codebase for better developer experience and code quality
+1. Install dependencies
 
-## Prerequisites
-
-- Node.js (v14 or newer)
-- npm or yarn
-- Expo CLI (`npm install -g expo-cli`)
-- iOS Simulator (for Mac users) or Android Studio (for Android development)
-- Expo Go app on your physical device (for testing)
-
-## Installation
-
-1. Clone the repository:
-   ```
-   git clone <repository-url>
-   cd toonify-v1/frontend-mobile
-   ```
-
-2. Install dependencies:
-   ```
+   ```bash
    npm install
    ```
 
-3. Create a `.env` file in the root directory with the following variables:
+2. Start the app
+
+   ```bash
+    npx expo start
    ```
-   API_URL=http://localhost:3000
-   ```
 
-## Running the App
+In the output, you'll find options to open the app in a
 
-### Development Mode
+- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
+- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
+- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
+- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
-```
-npm start
-```
+You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
-This will start the Expo development server. You can then:
-- Press `i` to open in iOS simulator
-- Press `a` to open in Android emulator
-- Scan the QR code with the Expo Go app on your physical device
+## Get a fresh project
 
-### Building for Production
+When you're ready, run:
 
-```
-expo build:android
-expo build:ios
+```bash
+npm run reset-project
 ```
 
-## Project Structure
+This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
-- `src/` - Source code directory
-  - `App.tsx` - Main application component
-  - `auth/` - Authentication related components and context
-    - `AuthContext.tsx` - Authentication state management
-    - `SignInScreen.tsx` - Sign in screen
-    - `SignUpScreen.tsx` - Sign up screen
-    - `types.ts` - TypeScript type definitions
-  - `types/` - Global type definitions
-    - `env.d.ts` - Environment variable type declarations
-- `assets/` - Images, fonts, and other static assets
+## Learn more
 
-## TypeScript
+To learn more about developing your project with Expo, look at the following resources:
 
-This project uses TypeScript for type safety and better developer experience:
+- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
+- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
 
-- **Type Definitions**: All components, functions, and data structures are properly typed
-- **Interface Definitions**: Clear interfaces for props, state, and API responses
-- **Type Checking**: Catch errors at compile time rather than runtime
-- **Better IDE Support**: Enhanced autocomplete and inline documentation
+## Join the community
 
-## Authentication Flow
+Join our community of developers creating universal apps.
 
-The app uses a context-based authentication system:
-1. User credentials are stored securely using `expo-secure-store`
-2. Authentication tokens are managed in the `AuthContext`
-3. API requests include the authentication token in headers
-
-## Debugging
-
-### View Logs
-
-```
-expo logs
-```
-
-### Developer Menu
-
-- Shake your device or press:
-  - iOS Simulator: `Cmd + D`
-  - Android Simulator: `Cmd + M`
-
-### Remote Debugging
-
-1. Open the developer menu
-2. Select "Debug Remote JS" to open Chrome DevTools
-3. View console logs, network requests, and set breakpoints
-
-### Error Handling
-
-The app includes an Error Boundary component that catches and displays React errors on screen and logs them to the console.
-
-## API Integration
-
-The app communicates with a backend server for:
-- User authentication
-- Image processing
-- Video generation
-
-Make sure the backend server is running and accessible at the URL specified in your `.env` file.
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details. 
+- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
+- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Alert, Modal, Image, Pressable, Platform } from 'react-native';
 import { LogOut, Palette, X, ChevronUp, ChevronDown, User, Edit3 } from 'lucide-react-native';
-import { authClient, uploadProfilePicture } from "@/stores/auth";
+import { authClient } from "@/stores/auth";
 import { useCredits } from '@/hooks/useCredits';
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
@@ -51,33 +51,34 @@ export default function ProfileScreen() {
   };
 
   const handleEditProfilePicture = async () => {
-    setIsImageOverlayVisible(false);
-    if (Platform.OS !== 'web') {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'Camera roll permissions are needed to change the profile picture.');
-        return;
-      }
-    }
+    setIsImageOverlayVisible(true)
+    // setIsImageOverlayVisible(false);
+    // if (Platform.OS !== 'web') {
+    //   const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    //   if (status !== 'granted') {
+    //     Alert.alert('Permission Denied', 'Camera roll permissions are needed to change the profile picture.');
+    //     return;
+    //   }
+    // }
 
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.5,
-    });
+    // let result = await ImagePicker.launchImageLibraryAsync({
+    //   mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    //   allowsEditing: true,
+    //   aspect: [1, 1],
+    //   quality: 0.5,
+    // });
 
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      const asset = result.assets[0];
-      setIsUploading(true);
-      try {
-        await uploadProfilePicture(asset);
-      } catch (error: any) {
-        Alert.alert('Upload Failed', error.message || 'Could not update profile picture.');
-      } finally {
-        setIsUploading(false);
-      }
-    }
+    // if (!result.canceled && result.assets && result.assets.length > 0) {
+    //   const asset = result.assets[0];
+    //   setIsUploading(true);
+    //   try {
+    //     await uploadProfilePicture(asset);
+    //   } catch (error: any) {
+    //     Alert.alert('Upload Failed', error.message || 'Could not update profile picture.');
+    //   } finally {
+    //     setIsUploading(false);
+    //   }
+    // }
   };
 
   const visibleTransactions = isCreditsExpanded 
@@ -137,7 +138,7 @@ export default function ProfileScreen() {
               icon={<LogOut size={18} color={theme.text.primary} />}
               onPress={handleLogout}
               size="$3"
-              backgroundColor={theme.text.error}
+              chromeless
               color={theme.text.primary}
             >
               Logout
@@ -176,7 +177,7 @@ export default function ProfileScreen() {
             ) : creditHistory.length > 0 ? (
               <YStack>
                 <YStack>
-                  {visibleTransactions.map((transaction) => (
+                  {visibleTransactions.map((transaction: any) => (
                     <CreditItem key={transaction.id} item={transaction} />
                   ))}
                 </YStack>
@@ -259,7 +260,7 @@ export default function ProfileScreen() {
             />
           </YStack>
           <View style={styles.footer}>
-            <Text color={theme.text.secondary} fontSize="$3">© 2024 Toonify. All rights reserved.</Text>
+            <Text color={theme.text.secondary} fontSize="$3">© 2025 Toonify. All rights reserved.</Text>
           </View>
         </YStack>
       </ScrollView>

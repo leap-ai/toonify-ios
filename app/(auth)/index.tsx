@@ -6,9 +6,6 @@ import { useRouter } from 'expo-router';
 import { LinearGradient } from 'tamagui/linear-gradient';
 import { useAppTheme } from '@/context/ThemeProvider';
 
-// TODO: Replace with your actual background image if applicable
-// const backgroundImage = require('@/assets/images/landing-background.png'); 
-
 const image1Url = 'https://images.pexels.com/photos/254069/pexels-photo-254069.jpeg?cs=srgb&dl=pexels-j-carter-53083-254069.jpg&fm=jpg';
 const image2Url = 'https://v3.fal.media/files/monkey/g0LvWSrfMt9FQmzG4unMn_e5f91588f6c14482ad70eea8112ddf66.png';
 
@@ -16,10 +13,6 @@ export default function LandingScreen() {
   const router = useRouter();
   const { getCurrentTheme, isDarkMode, activeThemeVariant, getPrimaryGradient } = useAppTheme();
   const theme = getCurrentTheme();
-
-  const navigateToSignUp = () => {
-    router.push('/(auth)/signup');
-  };
 
   const navigateToLogin = () => {
     router.push('/(auth)/login');
@@ -80,11 +73,6 @@ export default function LandingScreen() {
             />
           </Stack>
         </XStack>
-        
-        {/* Middle Content Area (Spacer pushes it down if needed, or remove if images are enough) */}
-        {/* <YStack flex={1} /> */}
-
-        {/* Bottom Content Area (Text + Buttons) */}
           <YStack space="$3" alignItems="center">
             <H1 
               textAlign="center" 
@@ -111,23 +99,11 @@ export default function LandingScreen() {
             <Button 
               themeInverse 
               size="$5" 
-              onPress={navigateToSignUp}
+              onPress={navigateToLogin}
               backgroundColor={theme.text.accent}
             >
               Get Started
             </Button>
-            <XStack justifyContent="center" alignItems="center" space="$2">
-              <Text color={theme.text.tertiary}>Already have an account?</Text>
-              <Button 
-                unstyled 
-                pressStyle={{ opacity: 0.7 }}
-                onPress={navigateToLogin}
-                color={theme.text.accent}
-                fontWeight="bold"
-              >
-                Log In
-              </Button>
-            </XStack>
           </YStack>
       </YStack>
     </SafeAreaView>

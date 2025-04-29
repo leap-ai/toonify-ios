@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, FlatList, Dimensions, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useGenerationStore } from '../../stores/generation';
+import { useGenerationStore } from '@/stores/generation';
 import { ArrowLeft } from 'lucide-react-native';
 import { 
   Text, 

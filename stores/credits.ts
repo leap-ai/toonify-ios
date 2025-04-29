@@ -1,8 +1,7 @@
 import { create } from 'zustand';
-import { API_URL } from '../config';
-import { getAuthHeaders } from '@/utils';
-import { ProductMetadata, PurchaseCompletedEvent } from '@/types';
-import { CreditTransaction } from '@/types';
+import { API_URL } from '@/utils/config';
+import { getAuthHeaders } from '@/stores/auth';
+import { ProductMetadata, PurchaseCompletedEvent, CreditTransaction } from '@/utils/types';
 
 export interface StoreTransaction {
   productIdentifier: string;
