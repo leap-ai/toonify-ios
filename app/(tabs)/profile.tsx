@@ -244,12 +244,12 @@ export default function ProfileScreen() {
             />
             <InfoItem 
               title="Privacy Policy" 
-              onPress={() => router.push('/privacy-policy')}
+              onPress={() => {}}
               icon={<View style={{ width: 18 }} />}
             />
             <InfoItem 
               title="Terms of Service" 
-              onPress={() => router.push('/terms-and-conditions')}
+              onPress={() => {}}
               icon={<View style={{ width: 18 }} />}
             />
             <InfoItem 
