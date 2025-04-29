@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { API_URL } from '@/config';
+import { API_URL } from '../config';
 import { getAuthHeaders } from '@/utils';
 import { ProductMetadata, PurchaseCompletedEvent } from '@/types';
 import { CreditTransaction } from '@/types';
