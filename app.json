@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Toonify AI",
+    "name": "Toonify",
     "slug": "toonify",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -17,7 +17,6 @@
       "usesAppleSignIn": true,
       "supportsTablet": true,
       "bundleIdentifier": "com.leapai.toonify",
-      "buildNumber": "1.0.0",
       "infoPlist": {
         "NSUserTrackingUsageDescription": "We use this to offer personalized pricing",
         "ITSAppUsesNonExemptEncryption": false,
