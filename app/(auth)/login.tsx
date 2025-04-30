@@ -18,6 +18,7 @@ import {
 import { useAppTheme } from '@/context/ThemeProvider';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
+import { GOOGLE_IOS_CLIENT_ID, GOOGLE_WEB_CLIENT_ID } from '@/utils/config';
 
 // Initialize WebBrowser
 WebBrowser.maybeCompleteAuthSession();
@@ -33,8 +34,8 @@ export default function LoginScreen() {
 
   // Google Sign In Hook
   const [request, response, promptAsync] = Google.useAuthRequest({
-    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+    iosClientId: GOOGLE_IOS_CLIENT_ID,
+    webClientId: GOOGLE_WEB_CLIENT_ID,
   });
 
   useEffect(() => {
