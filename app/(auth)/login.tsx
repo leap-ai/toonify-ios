@@ -233,6 +233,8 @@ export default function LoginScreen() {
             
             <Button 
               theme="active"
+              backgroundColor={theme.tint}
+              color={theme.text.primary}
               size="$4" 
               onPress={handleEmailLogin}
               disabled={isLoading}

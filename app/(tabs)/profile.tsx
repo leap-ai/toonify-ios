@@ -22,6 +22,7 @@ import { useAppTheme } from '@/context/ThemeProvider';
 import ThemeSelector from '@/components/ThemeSelector';
 import InfoItem from '@/components/InfoItem';
 import CreditItem from '@/components/CreditItem';
+import { API_URL } from '@/utils/config';
 
 export default function ProfileScreen() {
   const { data: session, isPending } = authClient.useSession();
@@ -39,7 +40,6 @@ export default function ProfileScreen() {
   const handleLogout = async () => {
     try {
       await authClient.signOut();
-      router.replace('/(auth)');
     } catch (error) {
       console.error('Logout failed:', error);
       Alert.alert('Error', 'Failed to log out. Please try again.');
@@ -247,12 +247,22 @@ export default function ProfileScreen() {
             />
             <InfoItem 
               title="Privacy Policy" 
-              onPress={() => {}}
+              onPress={() => {
+                router.push({
+                  pathname: '/legal',
+                  params: { url: `${API_URL}/privacy-policy.html`, title: 'Privacy Policy' },
+                });
+              }}
               icon={<View style={{ width: 18 }} />}
             />
             <InfoItem 
               title="Terms of Service" 
-              onPress={() => {}}
+              onPress={() => {
+                router.push({
+                  pathname: '/legal',
+                  params: { url: `${API_URL}/terms-and-conditions.html`, title: 'Terms and Conditions' },
+                });
+              }}
               icon={<View style={{ width: 18 }} />}
             />
             <InfoItem 

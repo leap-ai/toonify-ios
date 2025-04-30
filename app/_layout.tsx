@@ -72,8 +72,7 @@ export default function RootLayout() {
             <Stack.Screen name="(auth)/signup" options={{ headerShown: false }} />
             
             <Stack.Screen name="+not-found" />
-            {/* <Stack.Screen name="privacy-policy" />
-            <Stack.Screen name="terms-and-conditions" /> */}
+            <Stack.Screen name="legal" />
           </Stack>
           <StatusBar style="auto" />
         </ProductMetadataProvider>

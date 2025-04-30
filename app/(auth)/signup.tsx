@@ -179,19 +179,20 @@ export default function SignupScreen() {
 
             <Button
               theme="active"
+              backgroundColor={theme.tint}
+              color={theme.text.primary}
               size="$4"
               onPress={handleSignup}
               disabled={isLoading}
-              fontWeight="bold"
               icon={isLoading ? undefined : <UserPlus size={18} />}
             >
               {isLoading ? (
                 <XStack space="$2" alignItems="center">
                   <Spinner size="small" />
-                  <Text>Creating Account...</Text>
+                  <Text fontWeight="bold">Creating Account...</Text>
                 </XStack>
               ) : (
-                <Text>Create Account</Text>
+                <Text fontWeight="bold">Create Account</Text>
               )}
             </Button>
           </YStack>
