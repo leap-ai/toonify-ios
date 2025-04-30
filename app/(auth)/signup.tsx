@@ -14,8 +14,11 @@ import {
   Card,
   Spinner,
   H5,
+  Checkbox,
+  Label
 } from 'tamagui';
 import { useAppTheme } from '@/context/ThemeProvider';
+import { API_URL } from '@/utils/config';
 
 export default function SignupScreen() {
   const [name, setName] = useState('');
@@ -25,6 +28,8 @@ export default function SignupScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const errorRef = useRef<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [readPrivacy, setReadPrivacy] = useState(false);
   const { getCurrentTheme, isDarkMode } = useAppTheme();
   const theme = getCurrentTheme();
 
@@ -177,13 +182,70 @@ export default function SignupScreen() {
               borderColor={theme.separator}
             />
 
+            <YStack space="$3">
+              <XStack alignItems="center" space="$2">
+                <Checkbox 
+                  id="terms-checkbox" 
+                  checked={acceptedTerms} 
+                  onCheckedChange={() => setAcceptedTerms(!acceptedTerms)}
+                  size="$4"
+                  borderColor={theme.separator}
+                  backgroundColor={acceptedTerms ? theme.text.accent : undefined}
+                >
+                    <Checkbox.Indicator />
+                </Checkbox>
+                <Label htmlFor="terms-checkbox" flex={1}>
+                  <Text fontSize="$3" color={theme.text.secondary}>
+                    I accept the app's {' '}
+                    <Text 
+                      color={theme.tint} 
+                      fontWeight="bold"
+                      onPress={() => router.push({ 
+                        pathname: '/legal', 
+                        params: { url: `${API_URL}/terms-and-conditions.html`, title: 'Terms and Conditions' } 
+                      })}
+                    >
+                      Terms and Conditions
+                    </Text>.
+                  </Text>
+                </Label>
+              </XStack>
+              <XStack alignItems="center" space="$2">
+                <Checkbox 
+                  id="privacy-checkbox" 
+                  checked={readPrivacy} 
+                  onCheckedChange={() => setReadPrivacy(!readPrivacy)}
+                  size="$4"
+                  borderColor={theme.separator}
+                  backgroundColor={readPrivacy ? theme.text.accent : undefined}
+                >
+                    <Checkbox.Indicator />
+                </Checkbox>
+                <Label htmlFor="privacy-checkbox" flex={1}>
+                  <Text fontSize="$3" color={theme.text.secondary}>
+                    I confirm I have read the {' '}
+                    <Text 
+                      color={theme.tint} 
+                      fontWeight="bold"
+                      onPress={() => router.push({ 
+                        pathname: '/legal', 
+                        params: { url: `${API_URL}/privacy-policy.html`, title: 'Privacy Policy' } 
+                      })}
+                    >
+                      Privacy Policy
+                    </Text>.
+                  </Text>
+                </Label>
+              </XStack>
+            </YStack>
+
             <Button
               theme="active"
               backgroundColor={theme.tint}
               color={theme.text.primary}
               size="$4"
               onPress={handleSignup}
-              disabled={isLoading}
+              disabled={isLoading || !acceptedTerms || !readPrivacy}
               icon={isLoading ? undefined : <UserPlus size={18} />}
             >
               {isLoading ? (

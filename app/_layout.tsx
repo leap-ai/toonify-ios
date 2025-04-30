@@ -44,11 +44,13 @@ export default function RootLayout() {
 
   useEffect(() => {
     const inAuthGroup = segments[0] === '(auth)';
+    const isLegalRoute = segments[0] === 'legal'; // Check if the current route is legal
+
     if (session?.user?.id && inAuthGroup) {
       // If user is logged in and in auth group, redirect to tabs
       router.replace('/(tabs)'); 
-    } else if (!session?.user?.id && !inAuthGroup) {
-      // If user is NOT logged in and NOT in auth group, redirect to the landing page
+    } else if (!session?.user?.id && !inAuthGroup && !isLegalRoute) { // Add !isLegalRoute condition
+      // If user is NOT logged in, NOT in auth group, AND NOT on legal route, redirect to auth
       router.replace('/(auth)'); // Target the (auth) group index
     }
 

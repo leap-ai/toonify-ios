@@ -268,6 +268,16 @@ export default function ProfileScreen() {
               icon={<View style={{ width: 18 }} />}
             />
             <InfoItem 
+              title="Support" 
+              onPress={() => {
+                router.push({
+                  pathname: '/legal',
+                  params: { url: `${API_URL}/support.html`, title: 'Support' },
+                });
+              }}
+              icon={<View style={{ width: 18 }} />}
+            />
+            <InfoItem 
               title="App Version" 
               value="1.0.0"
               icon={<View style={{ width: 18 }} />}

@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Card, H3, Text, YStack, Button, Spinner } from 'tamagui';
 import { useAppTheme } from '@/context/ThemeProvider';
-import { LogOut } from 'lucide-react-native';
+import { APP_DISCLAIMER } from '@/utils/constants';
 
 export interface CreateCardProps {
   error: string | null;
@@ -84,6 +84,15 @@ export default function CreateCard({
               <Text style={{ color: 'white' }}>Generate Cartoon</Text>
             )}
           </Button>
+          
+          <Text 
+            fontSize="$2" 
+            color={theme.text.warning} 
+            textAlign="left" 
+            marginTop="$2"
+          >
+            {APP_DISCLAIMER}
+          </Text>
           
           {error ? (
             <Text style={[styles.errorText, { color: theme.text.error }]}>

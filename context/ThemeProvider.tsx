@@ -17,6 +17,7 @@ export interface ThemeColors {
     accent: string;
     error: string;
     success: string;
+    warning: string;
     shadowLight: string;
     shadowDark: string;
   };
@@ -74,6 +75,7 @@ export const themeVariants: ThemeVariant[] = [
           accent: '#007AFF',
           error: '#FF3B30',
           success: '#34C759',
+          warning: '#FFA500',
           shadowLight: 'rgba(0, 0, 0, 0.1)',
           shadowDark: 'rgba(0, 0, 0, 0.3)',
         },
@@ -96,6 +98,7 @@ export const themeVariants: ThemeVariant[] = [
           accent: '#0A84FF',
           error: '#FF453A',
           success: '#30D158',
+          warning: '#FFB733',
           shadowLight: 'rgba(0, 0, 0, 0.1)',
           shadowDark: 'rgba(0, 0, 0, 0.3)',
         },
@@ -146,6 +149,7 @@ export const themeVariants: ThemeVariant[] = [
           accent: '#9D50BB',
           error: '#E02020',
           success: '#28C76F',
+          warning: '#FFA500',
           shadowLight: 'rgba(0, 0, 0, 0.1)',
           shadowDark: 'rgba(0, 0, 0, 0.3)',
         },
@@ -168,6 +172,7 @@ export const themeVariants: ThemeVariant[] = [
           accent: '#A55EEA',
           error: '#FF6B6B',
           success: '#39DA8A',
+          warning: '#FFB733',
           shadowLight: 'rgba(0, 0, 0, 0.1)',
           shadowDark: 'rgba(0, 0, 0, 0.3)',
         },
@@ -218,6 +223,7 @@ export const themeVariants: ThemeVariant[] = [
           accent: '#FF8C00',
           error: '#E54D4D',
           success: '#48C774',
+          warning: '#FFA500',
           shadowLight: 'rgba(0, 0, 0, 0.1)',
           shadowDark: 'rgba(0, 0, 0, 0.3)',
         },
@@ -240,6 +246,7 @@ export const themeVariants: ThemeVariant[] = [
           accent: '#FF9F43',
           error: '#FF6B6B',
           success: '#39DA8A',
+          warning: '#FFB733',
           shadowLight: 'rgba(0, 0, 0, 0.1)',
           shadowDark: 'rgba(0, 0, 0, 0.3)',
         },
@@ -290,6 +297,7 @@ export const themeVariants: ThemeVariant[] = [
           accent: '#00B4D8',
           error: '#EF4444',
           success: '#10B981',
+          warning: '#FFA500',
           shadowLight: 'rgba(0, 0, 0, 0.1)',
           shadowDark: 'rgba(0, 0, 0, 0.3)',
         },
@@ -312,6 +320,7 @@ export const themeVariants: ThemeVariant[] = [
           accent: '#22D3EE',
           error: '#F87171',
           success: '#34D399',
+          warning: '#FFA500',
           shadowLight: 'rgba(0, 0, 0, 0.1)',
           shadowDark: 'rgba(0, 0, 0, 0.3)',
         },
