@@ -40,6 +40,8 @@ export default function ProfileScreen() {
   const handleLogout = async () => {
     try {
       await authClient.signOut();
+      // No need to redirect as better-auth session state in index.tsx will handle it.
+      // router.replace('/(auth)');
     } catch (error) {
       console.error('Logout failed:', error);
       Alert.alert('Error', 'Failed to log out. Please try again.');
