@@ -33,7 +33,7 @@ export default function CreateCard({
       ]}
     >
       <Card.Header padded alignItems="center">
-        <H3 style={{ color: theme.text.primary }}>Turn into Toon!</H3>
+        <H3 fontWeight="bold" style={{ color: theme.text.primary }}>Turn into Toon!</H3>
       </Card.Header>
       <YStack space="$2" p="$3">
         <View style={styles.imageContainer}>

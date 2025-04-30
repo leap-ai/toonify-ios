@@ -80,6 +80,7 @@ export default function LandingScreen() {
               textShadowColor={isDarkMode ? theme.text.shadowDark : theme.text.shadowLight}
               textShadowRadius={5}
               textShadowOffset={{ width: 0, height: 1 }}
+              fontWeight={400}
             >
               Welcome to
               <Text color={theme.tint}> Toonify AI</Text>
@@ -89,6 +90,7 @@ export default function LandingScreen() {
               size="$5" 
               color={theme.text.secondary}
               paddingHorizontal="$2"
+              fontWeight={400}
             >
               Turn your ideas into art in just a few taps. Explore, create, and be amazed by the power of AI.
             </Paragraph>
@@ -101,6 +103,7 @@ export default function LandingScreen() {
               size="$5" 
               onPress={navigateToLogin}
               backgroundColor={theme.text.accent}
+              fontWeight={500}
             >
               Get Started
             </Button>

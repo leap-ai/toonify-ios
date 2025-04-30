@@ -27,29 +27,23 @@ export default function RootLayout() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
-
-  // useEffect(() => {
-  //   Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
-  //   if (Platform.OS === 'ios') {
-  //     Purchases.configure({apiKey: REVENUE_CAT_APPLE_API_KEY});
-  //   }
-  // }, []);
+  useEffect(() => {
+    Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
+    if (Platform.OS === 'ios') {
+      Purchases.configure({apiKey: REVENUE_CAT_APPLE_API_KEY});
+    }
+  }, []);
 
   useEffect(() => {
     if (loaded) {
       SplashScreen.hideAsync();
+    } else {
+      return;
     }
   }, [loaded]);
 
   useEffect(() => {
-    if (!loaded) {
-      return; // Don't navigate until app is ready
-    } else {
-      SplashScreen.hideAsync();
-    }
-
     const inAuthGroup = segments[0] === '(auth)';
-
     if (session?.user?.id && inAuthGroup) {
       // If user is logged in and in auth group, redirect to tabs
       router.replace('/(tabs)'); 
@@ -57,8 +51,6 @@ export default function RootLayout() {
       // If user is NOT logged in and NOT in auth group, redirect to the landing page
       router.replace('/(auth)'); // Target the (auth) group index
     }
-    // No redirection needed if user is in the correct group relative to their auth state
-    // (e.g., logged in user in (tabs), logged out user in (auth))
 
   }, [session, segments, router]);
 

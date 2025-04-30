@@ -10,7 +10,9 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "test": "jest --watchAll",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "build:dev": "eas build -p ios --profile development --clear-cache",
+    "build:prod": "eas build -p ios --profile production --clear-cache"
   },
   "jest": {
     "preset": "jest-expo"
@@ -30,6 +32,7 @@
     "expo-auth-session": "~6.0.3",
     "expo-blur": "~14.0.3",
     "expo-constants": "~17.0.8",
+    "expo-dev-client": "~5.0.20",
     "expo-font": "~13.0.4",
     "expo-haptics": "~14.0.1",
     "expo-image-picker": "~16.0.6",

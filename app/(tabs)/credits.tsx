@@ -1,9 +1,8 @@
 import React from 'react';
-import { Text } from 'tamagui';
-// import Paywall from '@/components/Paywall';
+import Paywall from '@/components/Paywall';
 
 const CreditsScreen = () => {
-  return <Text>Paywall comes here!</Text>;
+  return <Paywall />;
 }
 
 export default CreditsScreen;

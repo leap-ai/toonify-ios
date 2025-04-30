@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Alert, Modal, Image, Pressable, Platform } from 'react-native';
 import { LogOut, Palette, X, ChevronUp, ChevronDown, User, Edit3 } from 'lucide-react-native';
-import { authClient } from "@/stores/auth";
+import { authClient, uploadProfilePicture } from "@/stores/auth";
 import { useCredits } from '@/hooks/useCredits';
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
@@ -51,34 +51,33 @@ export default function ProfileScreen() {
   };
 
   const handleEditProfilePicture = async () => {
-    setIsImageOverlayVisible(true)
-    // setIsImageOverlayVisible(false);
-    // if (Platform.OS !== 'web') {
-    //   const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    //   if (status !== 'granted') {
-    //     Alert.alert('Permission Denied', 'Camera roll permissions are needed to change the profile picture.');
-    //     return;
-    //   }
-    // }
+    setIsImageOverlayVisible(false);
+    if (Platform.OS !== 'web') {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Camera roll permissions are needed to change the profile picture.');
+        return;
+      }
+    }
 
-    // let result = await ImagePicker.launchImageLibraryAsync({
-    //   mediaTypes: ImagePicker.MediaTypeOptions.Images,
-    //   allowsEditing: true,
-    //   aspect: [1, 1],
-    //   quality: 0.5,
-    // });
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+    });
 
-    // if (!result.canceled && result.assets && result.assets.length > 0) {
-    //   const asset = result.assets[0];
-    //   setIsUploading(true);
-    //   try {
-    //     await uploadProfilePicture(asset);
-    //   } catch (error: any) {
-    //     Alert.alert('Upload Failed', error.message || 'Could not update profile picture.');
-    //   } finally {
-    //     setIsUploading(false);
-    //   }
-    // }
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const asset = result.assets[0];
+      setIsUploading(true);
+      try {
+        await uploadProfilePicture(asset);
+      } catch (error: any) {
+        Alert.alert('Upload Failed', error.message || 'Could not update profile picture.');
+      } finally {
+        setIsUploading(false);
+      }
+    }
   };
 
   const visibleTransactions = isCreditsExpanded 
@@ -127,30 +126,33 @@ export default function ProfileScreen() {
                 {session?.user?.name}
               </Text>
               <Text 
-                fontSize="$4"
+                fontSize="$3"
                 marginTop="$2"
                 color={theme.text.secondary}
               >
                 {session?.user?.email}
               </Text>
+              <Button 
+                icon={<LogOut size={18} color={theme.text.primary} />}
+                style={{ marginTop: 10 }}
+                onPress={handleLogout}
+                size="$3"
+                backgroundColor={theme.text.error}
+                color={theme.text.primary}
+                fontWeight={400}
+              >
+                Logout
+              </Button>
             </YStack>
-            <Button 
-              icon={<LogOut size={18} color={theme.text.primary} />}
-              onPress={handleLogout}
-              size="$3"
-              chromeless
-              color={theme.text.primary}
-            >
-              Logout
-            </Button>
+            
           </XStack>
           
           <Separator marginVertical="$4" backgroundColor={theme.separator} />
           
           <XStack justifyContent="space-between" alignItems="center">
-            <Text color={theme.text.primary}>Available Credits</Text>
+            <Text fontSize="$4" color={theme.text.primary}>Available Credits</Text>
             <Text 
-              fontSize="$4" 
+              fontSize="$5" 
               fontWeight="bold"
               color={theme.text.primary}
             >

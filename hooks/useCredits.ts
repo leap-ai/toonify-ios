@@ -8,7 +8,7 @@ import {
   PurchaseErrorEvent, 
   RestoreCompletedEvent, 
   RestoreErrorEvent,
-} from '@/types';
+} from '@/utils/types';
 
 export function useCredits() {
   const router = useRouter();

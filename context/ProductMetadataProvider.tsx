@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-// import Purchases, { PurchasesStoreProduct } from 'react-native-purchases';
+import Purchases, { PurchasesStoreProduct } from 'react-native-purchases';
 import { ProductMetadata } from '@/utils/types';
 
 type ProductMetadataContextType = {
@@ -17,15 +17,15 @@ export const ProductMetadataProvider: React.FC<{ children: React.ReactNode }> = 
   const refreshMetadata = async () => {
     setIsLoading(true);
     try {
-      // const offerings = await Purchases.getOfferings();
-      const offerings = { current: { availablePackages: [{ product: { identifier: 'test', title: 'Test', price: 1.99, priceString: '$1.99' } }] } };
+      const offerings = await Purchases.getOfferings();
+      // const offerings = { current: { availablePackages: [{ product: { identifier: 'test', title: 'Test', price: 1.99, priceString: '$1.99' } }] } };
       const current = offerings.current;
 
       if (current && current.availablePackages.length > 0) {
         const map: Record<string, ProductMetadata> = {};
         current.availablePackages.forEach(pkg => {
-          // const product: PurchasesStoreProduct = pkg.product;
-          const product: any = pkg.product;
+          const product: PurchasesStoreProduct = pkg.product;
+          // const product: any = pkg.product;
           map[product.identifier] = {
             name: product.title,
             price: product.price,            // number (e.g., 1.99)
