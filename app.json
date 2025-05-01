@@ -19,7 +19,6 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.leapai.toonify",
       "infoPlist": {
-        "NSUserTrackingUsageDescription": "We use this to offer personalized pricing",
         "ITSAppUsesNonExemptEncryption": false,
         "CFBundleURLTypes": [
           {
