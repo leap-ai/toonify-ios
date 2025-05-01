@@ -2,28 +2,25 @@ import { DarkTheme, DefaultTheme } from '@react-navigation/native';
 import { TamaguiProvider } from 'tamagui';
 import tamaguiConfig from '@/tamagui.config';
 import { useFonts } from 'expo-font';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
-import { authClient } from '@/stores/auth';
 
 import { Platform, useColorScheme } from 'react-native';
 import Purchases, { LOG_LEVEL } from 'react-native-purchases';
 import { REVENUE_CAT_APPLE_API_KEY } from '@/utils/config';
 import { ProductMetadataProvider } from '@/context/ProductMetadataProvider';
 import { ThemeProvider } from '@/context/ThemeProvider';
+import AuthHandler from '@/components/AuthHandler';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const { data: session, isPending: isAuthLoading } = authClient.useSession();
-  const segments = useSegments();
-  const router = useRouter();
   const colorScheme = useColorScheme() ?? 'light';
-  const [loaded] = useFonts({
+  const [loaded, fontError] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
@@ -35,46 +32,37 @@ export default function RootLayout() {
   }, []);
 
   useEffect(() => {
-    if (loaded) {
+    if (loaded || fontError) {
       SplashScreen.hideAsync();
-    } else {
-      return;
     }
-  }, [loaded]);
+  }, [loaded, fontError]);
 
-  useEffect(() => {
-    const inAuthGroup = segments[0] === '(auth)';
-    const isLegalRoute = segments[0] === 'legal'; // Check if the current route is legal
+  if (!loaded && !fontError) {
+    return null;
+  }
 
-    if (session?.user?.id && inAuthGroup) {
-      // If user is logged in and in auth group, redirect to tabs
-      router.replace('/(tabs)'); 
-    } else if (!session?.user?.id && !inAuthGroup && !isLegalRoute) { // Add !isLegalRoute condition
-      // If user is NOT logged in, NOT in auth group, AND NOT on legal route, redirect to auth
-      router.replace('/(auth)'); // Target the (auth) group index
-    }
-
-  }, [session, segments, router]);
-
-  if (!loaded) {
+  if (fontError) {
+    console.error("Font loading error - rendering fallback:", fontError);
     return null;
   }
 
   return (
-    // Pass the dynamically determined initial theme to TamaguiProvider
     <TamaguiProvider config={tamaguiConfig} defaultTheme={colorScheme ?? 'light'}>
       <ThemeProvider>
         <ProductMetadataProvider>
-        {/* Wrap the rest of the app with your custom theme context provider */}
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            {/* Screens accessible when logged out */}
-            <Stack.Screen name="(auth)/index" options={{ headerShown: false }} />
-            <Stack.Screen name="(auth)/login" options={{ headerShown: false }} />
-            <Stack.Screen name="(auth)/signup" options={{ headerShown: false }} />
-            
+          <AuthHandler />
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="(auth)/index" />
+            <Stack.Screen name="(auth)/login" />
+            <Stack.Screen name="(auth)/signup" />
+            <Stack.Screen 
+              name="legal" 
+              options={{ 
+                headerShown: true,
+              }} 
+            />
             <Stack.Screen name="+not-found" />
-            <Stack.Screen name="legal" />
           </Stack>
           <StatusBar style="auto" />
         </ProductMetadataProvider>
