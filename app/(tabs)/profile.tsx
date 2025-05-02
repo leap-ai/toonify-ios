@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Alert, Modal, Image, Pressable, Platform } from 'react-native';
 import { LogOut, Palette, X, ChevronUp, ChevronDown, User, Edit3, Trash2 } from 'lucide-react-native';
 import { authClient, uploadProfilePicture } from "@/stores/auth";
@@ -26,7 +26,7 @@ import CreditItem from '@/components/CreditItem';
 import { API_URL } from '@/utils/config';
 
 export default function ProfileScreen() {
-  const { data: session, isPending } = authClient.useSession();
+  const { data: session, isPending: isSessionLoading } = authClient.useSession();
   const { history: creditHistory, isLoading: isCreditsLoading, creditsBalance } = useCredits();
   const { getCurrentTheme, activeThemeVariant } = useAppTheme();
   const theme = getCurrentTheme();
@@ -35,15 +35,48 @@ export default function ProfileScreen() {
   const [isImageOverlayVisible, setIsImageOverlayVisible] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [hasPasswordAccount, setHasPasswordAccount] = useState<boolean | null>(null);
+  const [isCheckingAccountType, setIsCheckingAccountType] = useState(true);
 
   const profileImageUri = session?.user?.image;
   const canEditProfilePicture = profileImageUri?.startsWith('data:image/') ?? true;
 
+  const appVersion = Constants.expoConfig?.version ?? 'N/A';
+
+  useEffect(() => {
+    const checkAccountType = async () => {
+      if (!isSessionLoading && session?.user?.id) {
+        setIsCheckingAccountType(true);
+        try {
+          const accountsResult = await authClient.listAccounts();
+          if (accountsResult && Array.isArray(accountsResult?.data)) {
+            const accounts = accountsResult?.data || [];
+            const foundPasswordAccount = accounts.some(
+              (account: any) => account.provider === 'credential'
+            );
+            setHasPasswordAccount(foundPasswordAccount);
+          } else {
+            console.error("listAccounts did not return expected data:", accountsResult);
+            setHasPasswordAccount(false);
+          }
+        } catch (error) {
+          console.error("Failed to list accounts for account type check:", error);
+          setHasPasswordAccount(false);
+        } finally {
+          setIsCheckingAccountType(false);
+        }
+      } else if (!isSessionLoading) {
+        setHasPasswordAccount(false);
+        setIsCheckingAccountType(false);
+      }
+    };
+
+    checkAccountType();
+  }, [session, isSessionLoading]);
+
   const handleLogout = async () => {
     try {
       await authClient.signOut();
-      // No need to redirect as better-auth session state in index.tsx will handle it.
-      // router.replace('/(auth)');
     } catch (error) {
       console.error('Logout failed:', error);
       Alert.alert('Error', 'Failed to log out. Please try again.');
@@ -132,10 +165,7 @@ export default function ProfileScreen() {
     ? creditHistory 
     : creditHistory.slice(0, 3);
 
-  // Get app version from Constants
-  const appVersion = Constants.expoConfig?.version ?? 'N/A';
-
-  if (isPending) {
+  if (isSessionLoading) {
     return (
       <View style={[styles.container, styles.centerContainer, { backgroundColor: theme.screenBackground }]}>
         <Spinner size="large" color={theme.tint} />
@@ -346,18 +376,20 @@ export default function ProfileScreen() {
               Account Settings
             </H4>
             
-            <Button 
-              onPress={handleChangePassword} 
-              backgroundColor={theme.button.primary.background}
-              color={theme.button.primary.text}
-              hoverStyle={{ backgroundColor: theme.button.primary.hoverBackground }}
-              pressStyle={{ backgroundColor: theme.button.primary.pressBackground }}
-              fontWeight={400}
-              size="$4"
-              marginTop="$3"
-            >
-              Change Password
-            </Button>
+            {!isCheckingAccountType && hasPasswordAccount && (
+              <Button 
+                onPress={handleChangePassword} 
+                backgroundColor={theme.button.primary.background}
+                color={theme.button.primary.text}
+                hoverStyle={{ backgroundColor: theme.button.primary.hoverBackground }}
+                pressStyle={{ backgroundColor: theme.button.primary.pressBackground }}
+                fontWeight="400"
+                size="$4"
+                marginTop="$3"
+              >
+                Change Password
+              </Button>
+            )}
             <Button 
               onPress={handleDeleteAccount} 
               icon={isDeleting ? <Spinner color={theme.button.destructive.text} /> : <Trash2 size={18} color={theme.button.destructive.text} />}
@@ -365,8 +397,8 @@ export default function ProfileScreen() {
               color={theme.button.destructive.text}
               hoverStyle={{ backgroundColor: theme.button.destructive.hoverBackground }}
               pressStyle={{ backgroundColor: theme.button.destructive.pressBackground }}
-              disabled={isPending || isDeleting}
-              fontWeight={400}
+              disabled={isSessionLoading || isCheckingAccountType || isDeleting}
+              fontWeight="400"
               size="$4"
               marginTop="$3"
             >
