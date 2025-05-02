@@ -106,7 +106,13 @@ export default function ProfileScreen() {
             }
             setIsDeleting(true);
             try {
-              await authClient.deleteUser({ password });
+              // Delete after confirming password if account with credentials
+              if (hasPasswordAccount) {
+                await authClient.deleteUser({ password });
+              } else {
+              // Just delete after confirming password if account with socials
+                await authClient.deleteUser();
+              }
               // Sign out is automatically called by better-auth on successful deletion if session exists
               // No need to explicitly call signOut here, but good to be aware
               Alert.alert("Account Deleted", "Your account has been successfully deleted.");
