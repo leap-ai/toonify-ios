@@ -11,9 +11,6 @@ const Paywall = () => {
     handlePurchaseCompleted,
     handlePurchaseCancelled,
     handlePurchaseError,
-    handleRestoreStarted,
-    handleRestoreCompleted,
-    handleRestoreError,
     handleDismiss
   } = useCredits();
   const { getCurrentTheme } = useAppTheme();
@@ -44,9 +41,6 @@ const Paywall = () => {
         onPurchaseCompleted={handlePurchaseCompleted}
         onPurchaseCancelled={handlePurchaseCancelled}
         onPurchaseError={handlePurchaseError}
-        onRestoreStarted={handleRestoreStarted}
-        onRestoreCompleted={handleRestoreCompleted}
-        onRestoreError={handleRestoreError}
         onDismiss={handleDismiss}
       />
     </View>

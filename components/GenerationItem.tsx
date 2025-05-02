@@ -4,7 +4,9 @@ import { useRouter } from 'expo-router';
 import { X } from 'lucide-react-native';
 import { Text, Spinner, Stack, Button, Card, XStack } from 'tamagui';
 import { useAppTheme } from '@/context/ThemeProvider';
-import { formatRelativeDate } from '@/utils/dateUtils';
+import { formatRelativeDate } from '@/utils/date';
+import * as Sharing from 'expo-sharing';
+import { Share2, Trash2, RefreshCw, Zap, Download } from 'lucide-react-native';
 
 export interface Generation {
   id: number;
@@ -15,9 +17,15 @@ export interface Generation {
 
 interface GenerationItemProps {
   item: Generation;
+  onSelect: (imageUrl: string) => void;
+  isSelected: boolean;
+  onRetry: () => void;
+  onDelete: () => void;
+  isDeleting: boolean;
+  isError?: boolean;
 }
 
-const GenerationItem: React.FC<GenerationItemProps> = ({ item }) => {
+const GenerationItem: React.FC<GenerationItemProps> = ({ item, onSelect, isSelected, onRetry, onDelete, isDeleting, isError }) => {
   const router = useRouter();
   const [originalImageLoaded, setOriginalImageLoaded] = useState(false);
   const [cartoonImageLoaded, setCartoonImageLoaded] = useState(false);
@@ -97,6 +105,35 @@ const GenerationItem: React.FC<GenerationItemProps> = ({ item }) => {
           />
         </View>
       </Modal>
+      <XStack padding="$3" justifyContent="flex-end" space="$3">
+        {onRetry && (
+          <Button
+            onPress={onRetry}
+            icon={isError ? <Zap size={16} color={theme.button.secondary.text} /> : <RefreshCw size={16} color={theme.button.secondary.text} />}
+            backgroundColor={theme.button.secondary.background}
+            color={theme.button.secondary.text}
+            hoverStyle={{ backgroundColor: theme.button.secondary.hoverBackground }}
+            pressStyle={{ backgroundColor: theme.button.secondary.pressBackground }}
+            size="$3"
+          >
+            {isError ? 'Try Again' : 'Regenerate'}
+          </Button>
+        )}
+        {onDelete && (
+          <Button
+            onPress={onDelete}
+            disabled={isDeleting}
+            icon={isDeleting ? <Spinner size="small" color={theme.button.destructive.text} /> : <Trash2 size={16} color={theme.button.destructive.text} />}
+            backgroundColor={theme.button.destructive.background}
+            color={theme.button.destructive.text}
+            hoverStyle={{ backgroundColor: theme.button.destructive.hoverBackground }}
+            pressStyle={{ backgroundColor: theme.button.destructive.pressBackground }}
+            size="$3"
+          >
+            {isDeleting ? 'Deleting' : 'Delete'}
+          </Button>
+        )}
+      </XStack>
     </Card>
   );
 };

@@ -2,7 +2,7 @@
   "expo": {
     "name": "Toonify AI",
     "slug": "toonify",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/logo.png",
     "scheme": "toonify",
@@ -26,7 +26,8 @@
               "com.googleusercontent.apps.751659734273-j9q11n2ihah1cqa7v5nbr6elbckam3g4"
             ]
           }
-        ]
+        ],
+        "NSPhotoLibraryUsageDescription": "Toonify needs photo library access so you can upload an image to cartoon-ify it using AI."
       }
     },
     "web": {

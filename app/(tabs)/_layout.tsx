@@ -94,6 +94,16 @@ export default function TabLayout() {
             tabBarIcon: ({ color, size }) => <User size={22} color={color} />,
           }}
         />
+        <Tabs.Screen
+          name="change-password"
+          options={{
+            title: 'Change Password',
+            href: null,
+            tabBarIcon: ({ color, focused }) => (
+              <User color={color} size={24} />
+            ),
+          }}
+        />
       </Tabs>
     </SafeAreaView>
   );

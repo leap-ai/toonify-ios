@@ -3,6 +3,7 @@ import { View, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Card, H3, Text, YStack, Button, Spinner } from 'tamagui';
 import { useAppTheme } from '@/context/ThemeProvider';
 import { APP_DISCLAIMER } from '@/utils/constants';
+import { Zap } from '@tamagui/lucide-icons';
 
 export interface CreateCardProps {
   error: string | null;
@@ -67,11 +68,14 @@ export default function CreateCard({
         <YStack space="$2">
           <Button
             size="$4"
-            backgroundColor={theme.text.accent}
-            color={theme.text.primary}
+            backgroundColor={theme.button.primary.background}
+            color={theme.button.primary.text}
+            hoverStyle={{ backgroundColor: theme.button.primary.hoverBackground }}
+            pressStyle={{ backgroundColor: theme.button.primary.pressBackground }}
             onPress={onGenerate}
             style={styles.button}
             disabled={!selectedImage || isLoading}
+            icon={isLoading ? <Spinner color={theme.button.primary.text} /> : <Zap size={18} color={theme.button.primary.text} />}
           >
             {isLoading ? (
               <YStack space="$1" alignItems="center" flexDirection="row">

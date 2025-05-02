@@ -91,41 +91,6 @@ export function useCredits() {
     Alert.alert('Purchase Failed', `${error.code}: ${error.message}` || 'Something went wrong with the purchase.');
   };
 
-  const handleRestoreStarted = () => {
-    console.log('🔁 Restore started');
-  };
-
-  const handleRestoreCompleted = async ({ customerInfo }: RestoreCompletedEvent) => {
-    console.log('✅ Restore completed on client', { customerInfo });
-    const allTransactions = customerInfo?.allPurchasedProductIdentifiers;
-    
-    if (allTransactions && allTransactions.length > 0) {
-      const latestTransactionId = allTransactions[allTransactions.length - 1];
-      const productMetadata = metadataMap[latestTransactionId];
-      const productName = productMetadata?.name || latestTransactionId;
-      Alert.alert('Restore Completed', `Purchases restored. ${productName} was the latest.`);
-      
-      // Trigger data refresh after restore as well
-      try {
-        await Promise.allSettled([
-            fetchBalance(),
-            fetchHistory()
-        ]);
-        console.log('Balance and history refresh triggered after restore.');
-      } catch (refreshError) {
-        console.error('Error refreshing data after restore:', refreshError);
-      }
-
-    } else {
-      Alert.alert('No Purchases Found', 'No previous purchases found to restore.');
-    }
-  };
-
-  const handleRestoreError = ({ error }: RestoreErrorEvent) => {
-    console.error('❌ Restore error on client:', error);
-    Alert.alert('Restore Failed', `${error.code}: ${error.message}` || 'Could not restore purchases.');
-  };
-
   const handleDismiss = () => {
     console.log('👋 Paywall dismissed');
     router.back();
@@ -147,9 +112,6 @@ export function useCredits() {
     handlePurchaseCompleted,
     handlePurchaseCancelled,
     handlePurchaseError,
-    handleRestoreStarted,
-    handleRestoreCompleted,
-    handleRestoreError,
     handleDismiss
   };
 } 

@@ -27,6 +27,26 @@ export interface ThemeColors {
   separator: string;
   screenBackground: string;
   overlayBackground: string;
+  button: {
+    primary: {
+      background: string;
+      text: string;
+      hoverBackground: string;
+      pressBackground: string;
+    };
+    secondary: {
+      background: string;
+      text: string;
+      hoverBackground: string;
+      pressBackground: string;
+    };
+    destructive: {
+      background: string;
+      text: string;
+      hoverBackground: string;
+      pressBackground: string;
+    };
+  };
 }
 
 export interface GradientConfig {
@@ -85,6 +105,26 @@ export const themeVariants: ThemeVariant[] = [
         separator: '#E5E5E5',
         screenBackground: '#F9F9F9',
         overlayBackground: 'rgba(0, 0, 0, 0.6)',
+        button: {
+          primary: {
+            background: '#007AFF',
+            text: '#FFFFFF',
+            hoverBackground: '#005ECB',
+            pressBackground: '#004AAD'
+          },
+          secondary: {
+            background: '#E5E5E5',
+            text: '#000000',
+            hoverBackground: '#D4D4D4',
+            pressBackground: '#C3C3C3'
+          },
+          destructive: {
+            background: '#FF3B30',
+            text: '#FFFFFF',
+            hoverBackground: '#D9352B',
+            pressBackground: '#C33026'
+          },
+        },
       },
       dark: {
         tint: '#0A84FF',
@@ -108,6 +148,26 @@ export const themeVariants: ThemeVariant[] = [
         separator: '#333333',
         screenBackground: '#121212',
         overlayBackground: 'rgba(0, 0, 0, 0.8)',
+        button: {
+          primary: {
+            background: '#0A84FF',
+            text: '#FFFFFF',
+            hoverBackground: '#006AE5',
+            pressBackground: '#0057B7'
+          },
+          secondary: {
+            background: '#3A3A3C',
+            text: '#FFFFFF',
+            hoverBackground: '#48484A',
+            pressBackground: '#565658'
+          },
+          destructive: {
+            background: '#FF453A',
+            text: '#FFFFFF',
+            hoverBackground: '#E03B30',
+            pressBackground: '#C7342A'
+          },
+        },
       },
     },
     fonts: {
@@ -159,6 +219,26 @@ export const themeVariants: ThemeVariant[] = [
         separator: '#EFEFEF',
         screenBackground: '#FCFAFF',
         overlayBackground: 'rgba(40, 20, 60, 0.6)',
+        button: {
+          primary: {
+            background: '#8A2BE2',
+            text: '#FFFFFF',
+            hoverBackground: '#751EC0',
+            pressBackground: '#6113A0'
+          },
+          secondary: {
+            background: '#E5DCFF',
+            text: '#1A1A1A',
+            hoverBackground: '#D4C5F5',
+            pressBackground: '#C3AFEB'
+          },
+          destructive: {
+            background: '#E02020',
+            text: '#FFFFFF',
+            hoverBackground: '#C01A1A',
+            pressBackground: '#A01414'
+          },
+        },
       },
       dark: {
         tint: '#A55EEA',
@@ -182,6 +262,26 @@ export const themeVariants: ThemeVariant[] = [
         separator: '#392D4D',
         screenBackground: '#121212',
         overlayBackground: 'rgba(20, 10, 30, 0.8)',
+        button: {
+          primary: {
+            background: '#A55EEA',
+            text: '#FFFFFF',
+            hoverBackground: '#8E47D0',
+            pressBackground: '#7730B6'
+          },
+          secondary: {
+            background: '#392D4D',
+            text: '#FFFFFF',
+            hoverBackground: '#4A3A60',
+            pressBackground: '#5B4773'
+          },
+          destructive: {
+            background: '#FF6B6B',
+            text: '#121212',
+            hoverBackground: '#E05252',
+            pressBackground: '#C74040'
+          },
+        },
       },
     },
     fonts: {
@@ -233,6 +333,26 @@ export const themeVariants: ThemeVariant[] = [
         separator: '#EFEFEF',
         screenBackground: '#FFFAF5',
         overlayBackground: 'rgba(60, 30, 10, 0.6)',
+        button: {
+          primary: {
+            background: '#FF8C00',
+            text: '#FFFFFF',
+            hoverBackground: '#D97800',
+            pressBackground: '#B36200'
+          },
+          secondary: {
+            background: '#FFE0C0',
+            text: '#2D2D2D',
+            hoverBackground: '#FFD4A8',
+            pressBackground: '#FFC890'
+          },
+          destructive: {
+            background: '#E54D4D',
+            text: '#FFFFFF',
+            hoverBackground: '#C93C3C',
+            pressBackground: '#AD2B2B'
+          },
+        },
       },
       dark: {
         tint: '#FF9F43',
@@ -256,6 +376,26 @@ export const themeVariants: ThemeVariant[] = [
         separator: '#4D3F33',
         screenBackground: '#121212',
         overlayBackground: 'rgba(40, 20, 5, 0.8)',
+        button: {
+          primary: {
+            background: '#FF9F43',
+            text: '#121212',
+            hoverBackground: '#E08A30',
+            pressBackground: '#C2751D'
+          },
+          secondary: {
+            background: '#4D3F33',
+            text: '#FFFFFF',
+            hoverBackground: '#604E40',
+            pressBackground: '#735D4D'
+          },
+          destructive: {
+            background: '#FF6B6B',
+            text: '#121212',
+            hoverBackground: '#E05252',
+            pressBackground: '#C74040'
+          },
+        },
       },
     },
     fonts: {
@@ -307,6 +447,26 @@ export const themeVariants: ThemeVariant[] = [
         separator: '#EFEFEF',
         screenBackground: '#F7FCFD',
         overlayBackground: 'rgba(10, 40, 60, 0.6)',
+        button: {
+          primary: {
+            background: '#0077B6',
+            text: '#FFFFFF',
+            hoverBackground: '#0090D8',
+            pressBackground: '#0080C2'
+          },
+          secondary: {
+            background: '#90E0EF',
+            text: '#000000',
+            hoverBackground: '#A0E8F0',
+            pressBackground: '#80D8E0'
+          },
+          destructive: {
+            background: '#F87171',
+            text: '#FFFFFF',
+            hoverBackground: '#FF8080',
+            pressBackground: '#E06060'
+          },
+        },
       },
       dark: {
         tint: '#22D3EE',
@@ -330,6 +490,26 @@ export const themeVariants: ThemeVariant[] = [
         separator: '#2D4652',
         screenBackground: '#121212',
         overlayBackground: 'rgba(5, 20, 30, 0.8)',
+        button: {
+          primary: {
+            background: '#22D3EE',
+            text: '#FFFFFF',
+            hoverBackground: '#40E0F0',
+            pressBackground: '#30D0E0'
+          },
+          secondary: {
+            background: '#90E0EF',
+            text: '#000000',
+            hoverBackground: '#A0E8F0',
+            pressBackground: '#80D8E0'
+          },
+          destructive: {
+            background: '#F87171',
+            text: '#FFFFFF',
+            hoverBackground: '#FF8080',
+            pressBackground: '#E06060'
+          },
+        },
       },
     },
     fonts: {

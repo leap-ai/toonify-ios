@@ -33,6 +33,7 @@ export const ImageDetailsModal = ({ isVisible, onClose, item }: ImageDetailsModa
   const [isSharing, setIsSharing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const { deleteGeneration } = useGenerationStore();
+  // const [status, requestPermission] = MediaLibrary.usePermissions();
 
   // Reset loading states when modal opens with new item
   React.useEffect(() => {

@@ -3,14 +3,16 @@ import { View, Image, Modal, StyleSheet, TouchableWithoutFeedback } from 'react-
 import { Button, Spinner } from 'tamagui';
 import { X } from 'lucide-react-native';
 import { useAppTheme } from '@/context/ThemeProvider';
+import { BlurView } from 'expo-blur';
 
 interface ImageModalProps {
   imageUrl: string | null;
   isVisible: boolean;
   onClose: () => void;
+  children?: React.ReactNode;
 }
 
-export const ImageModal = ({ imageUrl, isVisible, onClose }: ImageModalProps) => {
+export const ImageModal = ({ imageUrl, isVisible, onClose, children }: ImageModalProps) => {
   const [imageLoading, setImageLoading] = useState(true);
   const { getCurrentTheme } = useAppTheme();
   const theme = getCurrentTheme();
@@ -21,6 +23,8 @@ export const ImageModal = ({ imageUrl, isVisible, onClose }: ImageModalProps) =>
       setImageLoading(true);
     }
   }, [isVisible, imageUrl]);
+
+  if (!isVisible) return null;
 
   return (
     <Modal
@@ -34,10 +38,11 @@ export const ImageModal = ({ imageUrl, isVisible, onClose }: ImageModalProps) =>
           <Button 
             icon={<X size={24} color={theme.text.primary} />}
             onPress={onClose}
-            backgroundColor="$backgroundStrong"
+            backgroundColor="transparent"
+            pressStyle={{ backgroundColor: theme.button.secondary.pressBackground }}
             position="absolute"
-            top={40}
-            right={20}
+            top="$2"
+            right="$2"
             zIndex={1}
             circular
           />

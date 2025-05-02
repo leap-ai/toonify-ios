@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Alert, Modal, Image, Pressable, Platform } from 'react-native';
-import { LogOut, Palette, X, ChevronUp, ChevronDown, User, Edit3 } from 'lucide-react-native';
+import { LogOut, Palette, X, ChevronUp, ChevronDown, User, Edit3, Trash2 } from 'lucide-react-native';
 import { authClient, uploadProfilePicture } from "@/stores/auth";
 import { useCredits } from '@/hooks/useCredits';
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
+import Constants from 'expo-constants';
 
 import { 
   Text, 
@@ -33,6 +34,7 @@ export default function ProfileScreen() {
   const [showThemeModal, setShowThemeModal] = useState(false);
   const [isImageOverlayVisible, setIsImageOverlayVisible] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const profileImageUri = session?.user?.image;
   const canEditProfilePicture = profileImageUri?.startsWith('data:image/') ?? true;
@@ -46,6 +48,50 @@ export default function ProfileScreen() {
       console.error('Logout failed:', error);
       Alert.alert('Error', 'Failed to log out. Please try again.');
     }
+  };
+
+  const handleChangePassword = () => {
+    router.push('/(tabs)/change-password');
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.prompt(
+      "Delete Account",
+      "Are you sure you want to delete your account? Please enter your password to confirm.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async (password) => {
+            if (!password) {
+              Alert.alert("Error", "Password is required to delete your account.");
+              return;
+            }
+            setIsDeleting(true);
+            try {
+              await authClient.deleteUser({ password });
+              // Sign out is automatically called by better-auth on successful deletion if session exists
+              // No need to explicitly call signOut here, but good to be aware
+              Alert.alert("Account Deleted", "Your account has been successfully deleted.");
+              // AuthHandler will redirect
+            } catch (error: any) {
+              console.error("Delete account failed:", error);
+              const errorMessage = error?.message || "Failed to delete account. Please check your password and try again.";
+              Alert.alert("Deletion Failed", errorMessage);
+            } finally {
+              setIsDeleting(false);
+            }
+          },
+        },
+      ],
+      'secure-text', // Use secure text input for password
+      '', // Default value (empty)
+      'default' // Keyboard type
+    );
   };
 
   const toggleCreditsExpanded = () => {
@@ -85,6 +131,9 @@ export default function ProfileScreen() {
   const visibleTransactions = isCreditsExpanded 
     ? creditHistory 
     : creditHistory.slice(0, 3);
+
+  // Get app version from Constants
+  const appVersion = Constants.expoConfig?.version ?? 'N/A';
 
   if (isPending) {
     return (
@@ -195,10 +244,13 @@ export default function ProfileScreen() {
                     backgroundColor="transparent"
                     color={theme.text.primary}
                     fontWeight="bold"
+                    hoverStyle={{ backgroundColor: theme.button.secondary.hoverBackground }}
+                    pressStyle={{ backgroundColor: theme.button.secondary.pressBackground }}
                     icon={isCreditsExpanded ?
                       <ChevronUp size={18} color={theme.text.primary} /> :
                       <ChevronDown size={18} color={theme.text.primary} />
                     }
+                    size="$3"
                   >
                     {isCreditsExpanded ? "Show Less" : "Show More"}
                   </Button>
@@ -221,9 +273,10 @@ export default function ProfileScreen() {
                 </Text>
                 <Button 
                   onPress={() => router.push('/credits')}
-                  themeInverse
-                  backgroundColor={theme.tint}
-                  color={theme.background}
+                  backgroundColor={theme.button.primary.background}
+                  color={theme.button.primary.text}
+                  hoverStyle={{ backgroundColor: theme.button.primary.hoverBackground }}
+                  pressStyle={{ backgroundColor: theme.button.primary.pressBackground }}
                   size="$3"
                 >
                   Get Credits
@@ -231,14 +284,14 @@ export default function ProfileScreen() {
               </Card>
             )}
           </YStack>
-
+            {/* App Settings */}
           <YStack space="$2">
             <H4 
               fontWeight="bold" 
               marginBottom="$2"
               color={theme.text.primary}
             >
-              Account Settings
+              App Settings
             </H4>
             
             <InfoItem 
@@ -279,9 +332,46 @@ export default function ProfileScreen() {
             />
             <InfoItem 
               title="App Version" 
-              value="1.0.0"
+              value={appVersion}
               icon={<View style={{ width: 18 }} />}
             />
+          </YStack>
+
+          <YStack space="$2">
+            <H4 
+              fontWeight="bold" 
+              marginBottom="$2"
+              color={theme.text.primary}
+            >
+              Account Settings
+            </H4>
+            
+            <Button 
+              onPress={handleChangePassword} 
+              backgroundColor={theme.button.primary.background}
+              color={theme.button.primary.text}
+              hoverStyle={{ backgroundColor: theme.button.primary.hoverBackground }}
+              pressStyle={{ backgroundColor: theme.button.primary.pressBackground }}
+              fontWeight={400}
+              size="$4"
+              marginTop="$3"
+            >
+              Change Password
+            </Button>
+            <Button 
+              onPress={handleDeleteAccount} 
+              icon={isDeleting ? <Spinner color={theme.button.destructive.text} /> : <Trash2 size={18} color={theme.button.destructive.text} />}
+              backgroundColor={theme.button.destructive.background}
+              color={theme.button.destructive.text}
+              hoverStyle={{ backgroundColor: theme.button.destructive.hoverBackground }}
+              pressStyle={{ backgroundColor: theme.button.destructive.pressBackground }}
+              disabled={isPending || isDeleting}
+              fontWeight={400}
+              size="$4"
+              marginTop="$3"
+            >
+              {isDeleting ? 'Deleting...' : 'Delete Account'}
+            </Button>
           </YStack>
           <View style={styles.footer}>
             <Text color={theme.text.secondary} fontSize="$3">© 2025 Toonify. All rights reserved.</Text>
@@ -309,25 +399,26 @@ export default function ProfileScreen() {
                  <Button 
                     chromeless
                     circular 
-                    backgroundColor="$backgroundStrong"
+                    pressStyle={{ backgroundColor: theme.button.secondary.pressBackground }}
                     onPress={() => setIsImageOverlayVisible(false)} 
                     icon={<X size={20} color={theme.text.primary} />}
                     size="$3"
+                    backgroundColor="transparent"
                   />
               </XStack>
               {canEditProfilePicture && (
                 <Button
-                  icon={isUploading ? <Spinner color={theme.text.primary}/> : <Edit3 size={18} color={theme.text.primary} />}
+                  icon={isUploading ? <Spinner color={theme.button.secondary.text}/> : <Edit3 size={18} color={theme.button.secondary.text} />}
                   onPress={handleEditProfilePicture}
                   disabled={isUploading}
                   marginBottom="$1"
-                  theme="alt1"
+                  backgroundColor={theme.button.secondary.background}
+                  color={theme.button.secondary.text}
+                  hoverStyle={{ backgroundColor: theme.button.secondary.hoverBackground }}
+                  pressStyle={{ backgroundColor: theme.button.secondary.pressBackground }}
                   size="$3"
-                  backgroundColor={theme.card}
-                  fontWeight="bold"
                   borderColor={theme.cardBorder}
                   borderWidth={1}
-                  color={theme.text.primary}
                 >
                   {isUploading ? 'Uploading...' : 'Edit Photo'}
                 </Button>
@@ -350,8 +441,10 @@ export default function ProfileScreen() {
               <Button 
                 chromeless
                 circular 
+                pressStyle={{ backgroundColor: theme.button.secondary.pressBackground }}
                 onPress={() => setShowThemeModal(false)} 
                 icon={<X size={24} color={theme.text.primary} />}
+                backgroundColor="transparent"
               />
             </XStack>
             <ThemeSelector onClose={() => setShowThemeModal(false)} />

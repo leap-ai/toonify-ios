@@ -240,22 +240,17 @@ export default function SignupScreen() {
             </YStack>
 
             <Button
-              theme="active"
-              backgroundColor={theme.tint}
-              color={theme.text.primary}
-              size="$4"
-              onPress={handleSignup}
+              onPress={handleSignup} 
               disabled={isLoading || !acceptedTerms || !readPrivacy}
-              icon={isLoading ? undefined : <UserPlus size={18} />}
+              backgroundColor={theme.button.primary.background}
+              color={theme.button.primary.text}
+              hoverStyle={{ backgroundColor: theme.button.primary.hoverBackground }}
+              pressStyle={{ backgroundColor: theme.button.primary.pressBackground }}
+              icon={isLoading ? <Spinner color={theme.button.primary.text} /> : undefined}
+              size="$4"
+              opacity={(isLoading || !acceptedTerms || !readPrivacy) ? 0.6 : 1}
             >
-              {isLoading ? (
-                <XStack space="$2" alignItems="center">
-                  <Spinner size="small" />
-                  <Text fontWeight="bold">Creating Account...</Text>
-                </XStack>
-              ) : (
-                <Text fontWeight="bold">Create Account</Text>
-              )}
+              {isLoading ? 'Signing up...' : 'Create Account'}
             </Button>
           </YStack>
         </Card>

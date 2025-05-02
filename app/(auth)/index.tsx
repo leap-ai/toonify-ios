@@ -99,11 +99,13 @@ export default function LandingScreen() {
           {/* Button Area */}
           <YStack space="$3">
             <Button 
-              themeInverse 
-              size="$5" 
               onPress={navigateToLogin}
-              backgroundColor={theme.text.accent}
-              fontWeight={500}
+              backgroundColor={theme.button.primary.background}
+              color={theme.button.primary.text}
+              hoverStyle={{ backgroundColor: theme.button.primary.hoverBackground }}
+              pressStyle={{ backgroundColor: theme.button.primary.pressBackground }}
+              size="$5"
+              marginTop="$4"
             >
               Get Started
             </Button>

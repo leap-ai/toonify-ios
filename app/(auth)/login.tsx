@@ -14,6 +14,7 @@ import {
   Separator, 
   Card,
   H5,
+  Spinner,
 } from 'tamagui';
 import { useAppTheme } from '@/context/ThemeProvider';
 import * as WebBrowser from 'expo-web-browser';
@@ -205,7 +206,12 @@ export default function LoginScreen() {
           </Text>
         </YStack>
         
-        <Card elevate bordered padding="$4" marginBottom="$2" backgroundColor={theme.card} borderColor={theme.cardBorder}>
+        <Card 
+          bordered 
+          padding="$4"
+          backgroundColor={theme.card}
+          borderColor={theme.cardBorder}
+        >
           <YStack space="$4">
             <Input
               placeholder="Enter your email"
@@ -232,15 +238,16 @@ export default function LoginScreen() {
             />
             
             <Button 
-              theme="active"
-              backgroundColor={theme.tint}
-              color={theme.text.primary}
-              size="$4" 
-              onPress={handleEmailLogin}
+              onPress={handleEmailLogin} 
               disabled={isLoading}
-              fontWeight="bold"
+              backgroundColor={theme.button.primary.background}
+              color={theme.button.primary.text}
+              hoverStyle={{ backgroundColor: theme.button.primary.hoverBackground }}
+              pressStyle={{ backgroundColor: theme.button.primary.pressBackground }}
+              icon={isLoading ? <Spinner color={theme.button.primary.text} /> : undefined}
+              size="$4"
             >
-              Sign In
+              {isLoading ? 'Logging in...' : 'Log In'}
             </Button>
           </YStack>
         </Card>
@@ -267,6 +274,8 @@ export default function LoginScreen() {
             borderColor={theme.separator}
             borderWidth={1}
             padding="$2"
+            hoverStyle={{ backgroundColor: theme.button.secondary.hoverBackground }}
+            pressStyle={{ backgroundColor: theme.button.secondary.pressBackground }}
             icon={
               isDarkMode ?
               <Image 
@@ -289,6 +298,8 @@ export default function LoginScreen() {
             borderColor={theme.separator}
             borderWidth={1}
             padding="$2"
+            hoverStyle={{ backgroundColor: theme.button.secondary.hoverBackground }}
+            pressStyle={{ backgroundColor: theme.button.secondary.pressBackground }}
             icon={
               <Image 
                 source={require('@/assets/images/google-logo.png')} 
