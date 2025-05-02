@@ -27,7 +27,7 @@
             ]
           }
         ],
-        "NSPhotoLibraryUsageDescription": "Toonify needs photo library access so you can upload an image to cartoon-ify it using AI."
+        "NSPhotoLibraryUsageDescription": "Toonify needs access to your photo library to upload images for cartoon generation and to let you update your profile picture."
       }
     },
     "web": {
