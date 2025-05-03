@@ -87,7 +87,7 @@ export default function ProfileScreen() {
     router.push('/(tabs)/change-password');
   };
 
-  const handleDeleteAccount = () => {
+  const handleDeleteAccountWithPassword = () => {
     Alert.prompt(
       "Delete Account",
       "Are you sure you want to delete your account? Please enter your password to confirm.",
@@ -106,13 +106,7 @@ export default function ProfileScreen() {
             }
             setIsDeleting(true);
             try {
-              // Delete after confirming password if account with credentials
-              if (hasPasswordAccount) {
-                await authClient.deleteUser({ password });
-              } else {
-              // Just delete after confirming password if account with socials
-                await authClient.deleteUser();
-              }
+              await authClient.deleteUser({ password });
               // Sign out is automatically called by better-auth on successful deletion if session exists
               // No need to explicitly call signOut here, but good to be aware
               Alert.alert("Account Deleted", "Your account has been successfully deleted.");
@@ -133,6 +127,21 @@ export default function ProfileScreen() {
     );
   };
 
+  const handleDeleteAccountWithSocials = async () => {
+    try {
+      await authClient.deleteUser();
+      // Sign out is automatically called by better-auth on successful deletion if session exists
+      // No need to explicitly call signOut here, but good to be aware
+      Alert.alert("Account Deleted", "Your account has been successfully deleted.");
+      // AuthHandler will redirect
+    } catch (error: any) {
+      console.error("Delete account failed:", error);
+      const errorMessage = error?.message || "Failed to delete account. Please check your password and try again.";
+      Alert.alert("Deletion Failed", errorMessage);
+    } finally {
+      setIsDeleting(false);
+    }
+  }
   const toggleCreditsExpanded = () => {
     setIsCreditsExpanded(!isCreditsExpanded);
   };
@@ -397,7 +406,7 @@ export default function ProfileScreen() {
               </Button>
             )}
             <Button 
-              onPress={handleDeleteAccount} 
+              onPress={hasPasswordAccount ? handleDeleteAccountWithPassword : handleDeleteAccountWithSocials} 
               icon={isDeleting ? <Spinner color={theme.button.destructive.text} /> : <Trash2 size={18} color={theme.button.destructive.text} />}
               backgroundColor={theme.button.destructive.background}
               color={theme.button.destructive.text}
