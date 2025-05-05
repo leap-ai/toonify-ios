@@ -14,7 +14,7 @@ interface GenerationState {
   generations: Generation[];
   isLoading: boolean;
   error: string | null;
-  generateImage: (imageUrl: string) => Promise<void>;
+  generateImage: (imageUrl: string, variant: string) => Promise<void>;
   fetchGenerations: () => Promise<void>;
   deleteGeneration: (id: number) => Promise<boolean>;
 }
@@ -24,7 +24,7 @@ export const useGenerationStore = create<GenerationState>((set) => ({
   isLoading: false,
   error: null,
 
-  generateImage: async (imageUrl: string) => {
+  generateImage: async (imageUrl: string, variant: string) => {
     try {
       set({ isLoading: true, error: null });
       console.log('Starting image generation process...');
@@ -36,6 +36,7 @@ export const useGenerationStore = create<GenerationState>((set) => ({
         name: 'upload.jpg',
         type: 'image/jpeg',
       } as any);
+      formData.append('variant', variant);
       
       console.log('Sending request to backend...');
       const headers = await getAuthHeaders();

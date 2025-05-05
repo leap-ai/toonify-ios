@@ -77,16 +77,7 @@ export default function CreateCard({
             disabled={!selectedImage || isLoading}
             icon={isLoading ? <Spinner color={theme.button.primary.text} /> : <Zap size={18} color={theme.button.primary.text} />}
           >
-            {isLoading ? (
-              <YStack space="$1" alignItems="center" flexDirection="row">
-                <Spinner color="white" />
-                <Text style={{ color: 'white', marginLeft: 10 }}>
-                  Generating Cartoon...
-                </Text>
-              </YStack>
-            ) : (
-              <Text style={{ color: 'white' }}>Generate Cartoon</Text>
-            )}
+            <Text style={{ color: 'white' }}>Generate Cartoon</Text>
           </Button>
           
           <Text 

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, Image, ScrollView, Alert, Animated } from 'react-native';
-import { YStack, Button, H1, Text } from 'tamagui';
 import { useAppTheme } from '@/context/ThemeProvider';
 import { useGenerationStore } from '@/stores/generation';
 import CreateCard from '@/components/CreateCard';
@@ -60,7 +59,7 @@ export default function GenerateScreen() {
       // Start the logo spin animation
       logoAnimation.start();
       
-      await generateImage(selectedImage);
+      await generateImage(selectedImage, "toon");
       router.push('/(tabs)/history');
     } catch (err) {
       // Stop the animation if there's an error
