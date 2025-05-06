@@ -7,6 +7,16 @@ import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useLogoSpinAnimation } from '@/hooks/useLogoSpin';
 
+// Define frontend variant type and options
+export type ImageVariantFrontend = 'pixar' | 'ghiblix' | 'sticker' | 'plushy';
+
+export const VARIANT_OPTIONS: { label: string; value: ImageVariantFrontend; image: any }[] = [
+  { label: 'Ghibli', value: 'ghiblix', image: require('@/assets/images/ghiblix.png') },
+  { label: 'Sticker', value: 'sticker', image: require('@/assets/images/sticker.png') },
+  { label: 'Pixar', value: 'pixar', image: require('@/assets/images/pixar.png') },
+  { label: 'Plushy', value: 'plushy', image: require('@/assets/images/plushy.png') },
+];
+
 export default function GenerateScreen() {
   const router = useRouter();
   const { getCurrentTheme } = useAppTheme();
@@ -14,17 +24,22 @@ export default function GenerateScreen() {
   const { generateImage, isLoading } = useGenerationStore();
   const [localError, setLocalError] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedVariant, setSelectedVariant] = useState<ImageVariantFrontend>(VARIANT_OPTIONS[0].value);
   
-  // Initialize the logo spin animation with autoStart=false
   const logoAnimation = useLogoSpinAnimation(2000, false);
   
   useEffect(() => {
     if (!isLoading) {
-      // Stop the animation when loading is complete
       logoAnimation.stop();
-      setSelectedImage(null);
+      // Keep selectedImage as is, user might want to re-generate with different style
+      // setSelectedImage(null); 
     }
   }, [isLoading]);
+
+  const handleDismissImage = () => {
+    setSelectedImage(null);
+    setLocalError(null); // Also clear any local error related to image picking/validation
+  };
 
   const pickImage = async () => {
     try {
@@ -59,7 +74,8 @@ export default function GenerateScreen() {
       // Start the logo spin animation
       logoAnimation.start();
       
-      await generateImage(selectedImage, "toon");
+      // Pass selectedVariant to generateImage
+      await generateImage(selectedImage, selectedVariant);
       router.push('/(tabs)/history');
     } catch (err) {
       // Stop the animation if there's an error
@@ -99,6 +115,10 @@ export default function GenerateScreen() {
           isLoading={isLoading}
           onPickImage={pickImage}
           onGenerate={handleGenerate}
+          variants={VARIANT_OPTIONS}
+          selectedVariant={selectedVariant}
+          onVariantChange={setSelectedVariant}
+          onDismissImage={handleDismissImage}
         />
       </ScrollView>
     </View>
@@ -111,8 +131,8 @@ const styles = StyleSheet.create({
     paddingTop: 50
   },
   logo: {
-    marginBottom: 20,
-    width: 48,
-    height: 48,
+    marginBottom: 10,
+    width: 24,
+    height: 24,
   }
 });
