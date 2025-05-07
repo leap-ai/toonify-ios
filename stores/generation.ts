@@ -28,7 +28,7 @@ export const useGenerationStore = create<GenerationState>((set, get) => ({
   error: null,
 
   generateImage: async (imageUrl: string, variant: string) => {
-    set({ isLoading: true, isGeneratingInBackground: true, error: null });
+    set({ isGeneratingInBackground: true, error: null });
     console.log('Starting image generation process (background state active)...');
     
     try {
@@ -53,7 +53,6 @@ export const useGenerationStore = create<GenerationState>((set, get) => ({
       
       set((state) => ({
         generations: [response.data, ...state.generations],
-        isLoading: false,
       }));
     } catch (error: any) {
       console.error('Generation error details:', {
@@ -70,9 +69,9 @@ export const useGenerationStore = create<GenerationState>((set, get) => ({
         errorMessage = error.message;
       }
       
-      set({ error: errorMessage, isLoading: false, isGeneratingInBackground: false });
+      set({ error: errorMessage, isGeneratingInBackground: false });
     } finally {
-      set({ isLoading: false, isGeneratingInBackground: false });
+      set({ isGeneratingInBackground: false });
       console.log('Image generation process finished (background state inactive).');
     }
   },

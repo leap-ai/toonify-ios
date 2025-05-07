@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, StyleSheet, Image, TouchableOpacity, ImageSourcePropType, ScrollView as RNScrollView } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, StyleSheet, Image, TouchableOpacity, ImageSourcePropType, ScrollView as RNScrollView, Animated } from 'react-native';
 import { Card, H3, Text, YStack, Button, Spinner, XStack, ToggleGroup, SizableText, ScrollView } from 'tamagui';
 import { useAppTheme } from '@/context/ThemeProvider';
 import { APP_DISCLAIMER } from '@/utils/constants';
@@ -60,6 +60,57 @@ export default function CreateCard({
   const theme = getCurrentTheme();
   const currentTips = BEST_PRACTICES[selectedVariant] || [];
 
+  // Animation setup
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const opacityAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (isLoading) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.parallel([
+            Animated.timing(scaleAnim, {
+              toValue: 0.95,
+              duration: 700,
+              useNativeDriver: true, // Enable native driver for better performance
+            }),
+            Animated.timing(opacityAnim, {
+              toValue: 0.7,
+              duration: 700,
+              useNativeDriver: true,
+            }),
+          ]),
+          Animated.parallel([
+            Animated.timing(scaleAnim, {
+              toValue: 1,
+              duration: 700,
+              useNativeDriver: true,
+            }),
+            Animated.timing(opacityAnim, {
+              toValue: 1,
+              duration: 700,
+              useNativeDriver: true,
+            }),
+          ]),
+        ])
+      ).start();
+    } else {
+      // Stop animation and reset values
+      scaleAnim.stopAnimation(); // Stop the loop
+      opacityAnim.stopAnimation();
+      Animated.parallel([
+        Animated.timing(scaleAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
+        Animated.timing(opacityAnim, { toValue: 1, duration: 200, useNativeDriver: true })
+      ]).start();
+    }
+
+    // Cleanup function to stop animation if component unmounts while isLoading
+    return () => {
+      scaleAnim.stopAnimation();
+      opacityAnim.stopAnimation();
+    };
+  }, [isLoading, scaleAnim, opacityAnim]);
+
   return (
     <Card 
       elevate
@@ -87,7 +138,16 @@ export default function CreateCard({
       <YStack space="$2">
         <View style={styles.imageContainer}>
           {selectedImage ? (
-            <Image source={{ uri: selectedImage }} style={styles.image} />
+            <Animated.Image
+              source={{ uri: selectedImage }}
+              style={[
+                styles.image,
+                {
+                  opacity: opacityAnim,
+                  transform: [{ scale: scaleAnim }],
+                },
+              ]}
+            />
           ) : (
             <TouchableOpacity 
               style={[

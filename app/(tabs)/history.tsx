@@ -79,7 +79,7 @@ export default function HistoryScreen() {
           chromeless
           marginRight="$2"
         />
-        <H4 color={theme.text.primary} fontWeight="bold">Your Cartoons</H4>
+        <H4 color={theme.text.primary} fontWeight="bold">Gallery</H4>
       </XStack>
       
       {generations.length === 0 ? (

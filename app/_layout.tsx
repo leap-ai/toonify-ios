@@ -7,8 +7,6 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
-import { ToastProvider, ToastViewport } from '@tamagui/toast';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Platform, useColorScheme } from 'react-native';
 import Purchases, { LOG_LEVEL } from 'react-native-purchases';
@@ -19,19 +17,6 @@ import AuthHandler from '@/components/AuthHandler';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
-
-const SafeToastViewport = () => {
-  const { top, left, right } = useSafeAreaInsets();
-  return (
-    <ToastViewport 
-      flexDirection="column" 
-      top={top + 10}
-      left={left}
-      right={right} 
-      name="global_toast_viewport"
-    />
-  );
-};
 
 export default function RootLayout() {
   const colorScheme = useColorScheme() ?? 'light';
@@ -65,28 +50,21 @@ export default function RootLayout() {
     <TamaguiProvider config={tamaguiConfig} defaultTheme={colorScheme ?? 'light'}>
       <ThemeProvider>
         <ProductMetadataProvider>
-          <ToastProvider
-            swipeDirection="horizontal"
-            duration={6000}
-            native={Platform.OS !== 'web'}
-          >
-            <AuthHandler />
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="(tabs)" />
-              <Stack.Screen name="(auth)/index" />
-              <Stack.Screen name="(auth)/login" />
-              <Stack.Screen name="(auth)/signup" />
-              <Stack.Screen 
-                name="legal" 
-                options={{ 
-                  headerShown: true,
-                }} 
-              />
-              <Stack.Screen name="+not-found" />
-            </Stack>
-            <StatusBar style="auto" />
-            <SafeToastViewport />
-          </ToastProvider>
+          <AuthHandler />
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="(auth)/index" />
+            <Stack.Screen name="(auth)/login" />
+            <Stack.Screen name="(auth)/signup" />
+            <Stack.Screen 
+              name="legal" 
+              options={{ 
+                headerShown: true,
+              }} 
+            />
+            <Stack.Screen name="+not-found" />
+          </Stack>
+          <StatusBar style="auto" />
         </ProductMetadataProvider>
       </ThemeProvider>
     </TamaguiProvider>
