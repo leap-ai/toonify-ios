@@ -6,8 +6,7 @@ import { APP_DISCLAIMER } from '@/utils/constants';
 import { Zap, X as XIcon, Info } from '@tamagui/lucide-icons';
 import { ImageVariantFrontend, VARIANT_OPTIONS } from '@/app/(tabs)/index';
 
-// Define the type for a single variant option based on VARIANT_OPTIONS structure
-type VariantOption = typeof VARIANT_OPTIONS[number];
+const selectedVariantLabel = (selectedVariant: ImageVariantFrontend) => VARIANT_OPTIONS.find(v => v.value === selectedVariant)?.label;
 
 // Define best practices data structure
 const BEST_PRACTICES: Record<ImageVariantFrontend, string[]> = {
@@ -200,7 +199,6 @@ export default function CreateCard({
               }}
               orientation="horizontal"
               size="$4.5"
-              bw={1}
               bc={theme.card}
               disablePassBorderRadius
               gap="$2.5"
@@ -300,7 +298,9 @@ export default function CreateCard({
             >
               <XStack alignItems="center" space="$2">
                 <Info size={16} color={theme.text.secondary} />
-                <SizableText size="$5" fontWeight="bold" color={theme.text.primary}>Tips for Best Results:</SizableText>
+                <SizableText size="$5" fontWeight="bold" color={theme.text.primary}>
+                  Tips for Best Results with {selectedVariantLabel(selectedVariant)}:
+                </SizableText>
               </XStack>
               {currentTips.map((tip, index) => (
                 <Text key={index} fontSize="$3" color={theme.text.secondary} marginLeft="$2">

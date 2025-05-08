@@ -1,21 +1,22 @@
 import { useEffect, useCallback } from 'react';
 import { useRouter } from 'expo-router';
 import { Alert } from 'react-native';
-import { useCreditsStore } from '@/stores/credits';
+import { useSubscriptionStore } from '@/stores/subscription';
 import { useProductMetadataContext } from '@/context/ProductMetadataProvider';
 import Purchases, { 
   PurchasesStoreProduct, 
-  CustomerInfo, 
+  // CustomerInfo, // Might not be needed from store anymore
   PurchasesError, 
   PurchasesPackage,
-  MakePurchaseResult
+  MakePurchaseResult,
+  CustomerInfo
 } from 'react-native-purchases';
 
 // Define PurchaseCompletedEvent and PurchaseErrorEvent locally to avoid import conflicts
 // and ensure they match the SDK's usage.
 export interface PurchaseCompletedEvent {
   productIdentifier: string;
-  customerInfo: CustomerInfo;
+  customerInfo: CustomerInfo; // Use Purchases.CustomerInfo directly if needed
 }
 
 export interface PurchaseErrorEvent {
@@ -24,31 +25,35 @@ export interface PurchaseErrorEvent {
 
 export function useCredits() {
   const router = useRouter();
-  const store = useCreditsStore();
+  // Use the renamed store
+  const store = useSubscriptionStore();
   const { metadataMap, isLoading: isMetadataLoading, refreshMetadata } = useProductMetadataContext();
   
-  // Get state and actions from the credits store
+  // Get state and actions from the subscription store
   const { 
     creditsBalance, 
     history, 
-    customerInfo,
+    // customerInfo, // Destructuring commented out, get from RC directly if needed
+    isActiveProMember, // Get pro status from store
+    proMembershipExpiresAt, // Get expiry from store
+    subscriptionInGracePeriod, // Get grace period from store
     isLoading: isStoreLoading,
     error: storeError,
     fetchBalance,
-    fetchHistory,
-    fetchCustomerInfo,
+    fetchPaymentsHistory,
+    fetchProStatus, // Use the correct fetch function
   } = store;
 
   // Combine loading states
   const isLoading = isStoreLoading || isMetadataLoading;
   
-  // Fetch initial data for both credits and subscription status
+  // Fetch initial data - now includes fetchProStatus
   useEffect(() => {
     fetchBalance();
-    fetchHistory();
-    fetchCustomerInfo();
-    refreshMetadata(); // Ensure product metadata for subscriptions is fresh
-  }, [fetchBalance, fetchHistory, fetchCustomerInfo, refreshMetadata]);
+    fetchPaymentsHistory();
+    fetchProStatus(); // Fetch backend pro status instead of RC CustomerInfo for state
+    refreshMetadata();
+  }, [fetchBalance, fetchPaymentsHistory, fetchProStatus, refreshMetadata]);
   
   // --- Handlers using metadataMap ---
 
@@ -112,21 +117,21 @@ export function useCredits() {
       `Your subscription to ${productName} is now active! Credits will be updated shortly if applicable.`
       );
 
-    // Refresh customer info (for subscription status) and credits data
+    // Refresh backend pro status and credits data
       try {
         await Promise.allSettled([
-        fetchCustomerInfo(),
-            fetchBalance(),
-            fetchHistory()
+          fetchProStatus(), // Use fetchProStatus here
+          fetchBalance(),
+          fetchPaymentsHistory()
         ]);
-      console.log('Subscription and credit data refresh triggered after purchase.');
+      console.log('Backend subscription status and credit data refresh triggered after purchase.');
       } catch (refreshError) {
         console.error('Error refreshing data after purchase:', refreshError);
       }
 
     // Navigate to profile or a relevant screen
       router.replace("/(tabs)/profile");
-  }, [fetchCustomerInfo, fetchBalance, fetchHistory, metadataMap, router]);
+  }, [fetchProStatus, fetchBalance, fetchPaymentsHistory, metadataMap, router]);
 
   const handlePurchaseCancelled = () => {
     console.log('🚫 Purchase cancelled by user');
@@ -135,7 +140,7 @@ export function useCredits() {
 
   const handlePurchaseError = (event: PurchaseErrorEvent) => {
     console.error('❌ Purchase error:', event.error);
-    const purchasesError = event.error; // Already typed as PurchasesError by the interface
+    const purchasesError = event.error;
     const readableMessage = purchasesError.userInfo?.readableErrorCode || purchasesError.message;
     Alert.alert('Purchase Failed', `${purchasesError.code}: ${readableMessage}` || 'Something went wrong with the purchase.');
   };
@@ -152,11 +157,11 @@ export function useCredits() {
         Alert.alert('No Purchases Found', 'We couldn\'t find any previous purchases to restore.');
       }
       
-      // Refresh customer info and potentially credits
+      // Refresh backend pro status and potentially credits
       await Promise.allSettled([
-        fetchCustomerInfo(),
-        fetchBalance(), // Credits might be granted server-side on restore too
-        fetchHistory()
+        fetchProStatus(), // Use fetchProStatus here
+        fetchBalance(),
+        fetchPaymentsHistory()
       ]);
     } catch (e) {
       const error = e as PurchasesError;
@@ -167,8 +172,6 @@ export function useCredits() {
 
   const handlePresentPaywall = async (offeringIdentifier?: string) => {
     console.log("Navigating to Paywall screen (/tabs/credits)...");
-    // If your Paywall screen needs the offeringIdentifier, pass it as a param:
-    // router.push({ pathname: '/(tabs)/credits', params: { offeringIdentifier } });
     router.push('/(tabs)/credits');
   };
 
@@ -180,28 +183,31 @@ export function useCredits() {
   };
 
   return {
-    // State
+    // State from useSubscriptionStore (backend is source of truth)
     creditsBalance,
     history,
-    customerInfo,
+    isActiveProMember,
+    proMembershipExpiresAt,
+    subscriptionInGracePeriod,
     isLoading,
-    error: storeError, // Make sure to expose the error from the store
-    products: metadataMap, // Expose product metadata, which now includes subscriptions
+    error: storeError,
+    // Metadata and other state
+    products: metadataMap,
     
-    // Actions from store (if direct access needed, though usually used internally by hook)
+    // Actions from store
     fetchBalance,
-    fetchHistory,
-    fetchCustomerInfo,
+    fetchPaymentsHistory,
+    fetchProStatus,
     
     // Handlers
-    handlePurchaseAttempt, // For purchasing a specific product
-    handlePurchasePackage, // For purchasing a specific package from an offering
+    handlePurchaseAttempt,
+    handlePurchasePackage,
     handlePurchaseCompleted,
     handlePurchaseCancelled,
     handlePurchaseError,
     handleRestorePurchases,
-    handlePresentPaywall,   // To navigate to the screen rendering Paywall.tsx
-    handleDismiss, // Used by Paywall.tsx
+    handlePresentPaywall,
+    handleDismiss,
   };
 } 
 

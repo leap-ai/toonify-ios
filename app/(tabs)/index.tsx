@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, Image, ScrollView, Alert, Animated, Platform } from 'react-native';
 import { useAppTheme } from '@/context/ThemeProvider';
+import { useSubscriptionStore } from '@/stores/subscription';
 import { useGenerationStore } from '@/stores/generation';
 import CreateCard from '@/components/CreateCard';
 import * as ImagePicker from 'expo-image-picker';
@@ -36,6 +37,7 @@ export default function GenerateScreen() {
     error,
     clearError,
   } = useGenerationStore();
+  const { isActiveProMember } = useSubscriptionStore();
   const { isLoading: isCreditsLoading } = useCredits();
 
   const [localError, setLocalError] = useState<string | null>(null);
@@ -123,7 +125,7 @@ export default function GenerateScreen() {
           selectedVariant={selectedVariant}
           onVariantChange={setSelectedVariant}
           onDismissImage={handleDismissImage}
-          isActiveProMember={false}
+          isActiveProMember={isActiveProMember}
         />
       </ScrollView>
     </View>
