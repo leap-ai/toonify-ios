@@ -105,7 +105,7 @@ export default function HistoryScreen() {
               onPress={() => router.push('/')}
               fontWeight="bold"
               backgroundColor={theme.tint}
-              color={theme.background}
+              color={theme.button.primary.text}
             >
               Generate Your First Cartoon
             </Button>

@@ -3,7 +3,7 @@ import { View, StyleSheet, Image, TouchableOpacity, ImageSourcePropType, ScrollV
 import { Card, H3, Text, YStack, Button, Spinner, XStack, ToggleGroup, SizableText, ScrollView } from 'tamagui';
 import { useAppTheme } from '@/context/ThemeProvider';
 import { APP_DISCLAIMER } from '@/utils/constants';
-import { Zap, X as XIcon, Info } from '@tamagui/lucide-icons';
+import { Zap, X as XIcon, Info, Lock } from '@tamagui/lucide-icons';
 import { ImageVariantFrontend, VARIANT_OPTIONS } from '@/app/(tabs)/index';
 
 const selectedVariantLabel = (selectedVariant: ImageVariantFrontend) => VARIANT_OPTIONS.find(v => v.value === selectedVariant)?.label;
@@ -233,6 +233,21 @@ export default function CreateCard({
                     opacity={isDisabled ? 0.6 : 1} 
                     // The YStack now contains the image, text, and potentially the Pro badge
                   >
+                      {/* Pro Badge with Lock Icon */}
+                      {isDisabled && (
+                        <XStack 
+                          alignItems="center" 
+                          space="$1.5" 
+                          paddingHorizontal="$2"
+                          paddingVertical="$1"
+                          borderRadius="$2"
+                          backgroundColor={theme.tint}
+                          style={styles.proBadgeContainer} 
+                        >
+                          <Lock size={12} color="white" />
+                          <Text style={styles.proBadgeText}>PRO</Text>
+                        </XStack>
+                      )}
                     <YStack alignItems="center" space="$2.5" position="relative"> 
                       <Image 
                         source={variant.image as ImageSourcePropType}
@@ -252,16 +267,6 @@ export default function CreateCard({
                       >
                         {variant.label}
                       </Text>
-
-                      {/* Pro Badge */}
-                      {isDisabled && (
-                        <View style={[
-                          styles.proBadgeContainer,
-                          { backgroundColor: theme.tint } // Use theme tint for badge background
-                        ]}>
-                          <Text style={styles.proBadgeText}>PRO</Text>
-                        </View>
-                      )}
                     </YStack>
                   </ToggleGroup.Item>
                 );
@@ -282,7 +287,9 @@ export default function CreateCard({
             disabled={!selectedImage || isLoading}
             icon={isLoading ? <Spinner color={theme.button.primary.text} /> : <Zap size={18} color={theme.button.primary.text} />}
           >
-            <Text style={{ color: 'white' }}>Generate</Text>
+            <Text fontSize="$4" fontWeight="bold" color={theme.button.primary.text}>
+              {isLoading ? 'Generating...' : 'Generate Toon'}
+            </Text>
           </Button>
           
           {/* Best Practices Section */}
@@ -303,8 +310,8 @@ export default function CreateCard({
                 </SizableText>
               </XStack>
               {currentTips.map((tip, index) => (
-                <Text key={index} fontSize="$3" color={theme.text.secondary} marginLeft="$2">
-                  • {tip}
+                <Text style={styles.tipItem} key={index} fontSize="$3" color={theme.text.primary} marginLeft="$2">
+                  {tip}
                 </Text>
               ))}
             </YStack>
@@ -379,22 +386,23 @@ const styles = StyleSheet.create({
   },
   infoSection: { /* ... */ },
   tipsList: { /* ... */ },
-  tipItem: { /* ... */ },
+  tipItem: {
+    marginBottom: 5,
+  },
+  // Style for the Pro Badge container (layout and shadow)
   proBadgeContainer: {
     position: 'absolute',
-    top: 5,
-    right: 5,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    elevation: 2, // For Android shadow
-    shadowColor: '#000', // For iOS shadow
+    top: 4,
+    right: 4,
+    elevation: 2, // Android shadow
+    shadowColor: '#000', // iOS shadow
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 1,
+    zIndex: 100,
   },
   proBadgeText: {
-    color: 'white', // Assuming tint background is dark enough for white text
+    color: 'white', 
     fontSize: 10,
     fontWeight: 'bold',
   },

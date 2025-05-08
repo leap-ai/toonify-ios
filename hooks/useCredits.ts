@@ -128,9 +128,6 @@ export function useCredits() {
       } catch (refreshError) {
         console.error('Error refreshing data after purchase:', refreshError);
       }
-
-    // Navigate to profile or a relevant screen
-      router.replace("/(tabs)/profile");
   }, [fetchProStatus, fetchBalance, fetchPaymentsHistory, metadataMap, router]);
 
   const handlePurchaseCancelled = () => {

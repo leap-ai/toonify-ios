@@ -233,7 +233,7 @@ export const themeVariants: ThemeVariant[] = [
             pressBackground: '#C3AFEB'
           },
           destructive: {
-            background: '#E02020',
+            background: '#FF3B30',
             text: '#FFFFFF',
             hoverBackground: '#C01A1A',
             pressBackground: '#A01414'
@@ -347,7 +347,7 @@ export const themeVariants: ThemeVariant[] = [
             pressBackground: '#FFC890'
           },
           destructive: {
-            background: '#E54D4D',
+            background: '#FF3B30',
             text: '#FFFFFF',
             hoverBackground: '#C93C3C',
             pressBackground: '#AD2B2B'
@@ -461,7 +461,7 @@ export const themeVariants: ThemeVariant[] = [
             pressBackground: '#80D8E0'
           },
           destructive: {
-            background: '#F87171',
+            background: '#FF3B30',
             text: '#FFFFFF',
             hoverBackground: '#FF8080',
             pressBackground: '#E06060'

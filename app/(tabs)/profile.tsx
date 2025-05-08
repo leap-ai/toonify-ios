@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Alert, Modal, Image, Pressable, Platform } from 'react-native';
-import { LogOut, Palette, X, ChevronUp, ChevronDown, User, Edit3, Trash2 } from 'lucide-react-native';
+import { LogOut, Palette, X, User, Edit3, Trash2 } from 'lucide-react-native';
 import { authClient, uploadProfilePicture } from "@/stores/auth";
 import { useCredits } from '@/hooks/useCredits';
 import { router } from 'expo-router';
@@ -13,7 +13,6 @@ import {
   YStack, 
   XStack, 
   Card, 
-  Separator, 
   Avatar, 
   Spinner, 
   ScrollView,
@@ -22,15 +21,13 @@ import {
 import { useAppTheme } from '@/context/ThemeProvider';
 import ThemeSelector from '@/components/ThemeSelector';
 import InfoItem from '@/components/InfoItem';
-import CreditItem from '@/components/CreditItem';
 import { API_URL } from '@/utils/config';
 
 export default function ProfileScreen() {
   const { data: session, isPending: isSessionLoading } = authClient.useSession();
-  const { history: creditHistory, isLoading: isCreditsLoading, creditsBalance } = useCredits();
+  const { history: creditHistory } = useCredits();
   const { getCurrentTheme, activeThemeVariant } = useAppTheme();
   const theme = getCurrentTheme();
-  const [isCreditsExpanded, setIsCreditsExpanded] = useState(false);
   const [showThemeModal, setShowThemeModal] = useState(false);
   const [isImageOverlayVisible, setIsImageOverlayVisible] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -142,9 +139,6 @@ export default function ProfileScreen() {
       setIsDeleting(false);
     }
   }
-  const toggleCreditsExpanded = () => {
-    setIsCreditsExpanded(!isCreditsExpanded);
-  };
 
   const handleEditProfilePicture = async () => {
     setIsImageOverlayVisible(false);
@@ -175,10 +169,6 @@ export default function ProfileScreen() {
       }
     }
   };
-
-  const visibleTransactions = isCreditsExpanded 
-    ? creditHistory 
-    : creditHistory.slice(0, 3);
 
   if (isSessionLoading) {
     return (
@@ -229,107 +219,22 @@ export default function ProfileScreen() {
                 {session?.user?.email}
               </Text>
               <Button 
-                icon={<LogOut size={18} color={theme.text.primary} />}
+                icon={<LogOut size={18} color={theme.button.primary.text} />}
                 style={{ marginTop: 10 }}
                 onPress={handleLogout}
                 size="$3"
-                backgroundColor={theme.text.error}
-                color={theme.text.primary}
+                backgroundColor={theme.button.destructive.background}
+                color={theme.button.primary.text}
                 fontWeight={400}
               >
                 Logout
               </Button>
             </YStack>
-            
-          </XStack>
-          
-          <Separator marginVertical="$4" backgroundColor={theme.separator} />
-          
-          <XStack justifyContent="space-between" alignItems="center">
-            <Text fontSize="$4" color={theme.text.primary}>Available Credits</Text>
-            <Text 
-              fontSize="$5" 
-              fontWeight="bold"
-              color={theme.text.primary}
-            >
-              {creditsBalance}
-            </Text>
           </XStack>
         </Card>
 
         <YStack space="$4">
-          <YStack space="$2">
-            <H4 
-              fontWeight="bold" 
-              marginBottom="$2"
-              color={theme.text.primary}
-            >
-              Credits History
-            </H4>
-            
-            {isCreditsLoading ? (
-              <YStack alignItems="center" padding="$4">
-                <Spinner size="large" color={theme.tint} />
-                <Text marginTop="$2" color={theme.text.secondary}>Loading credits history...</Text>
-              </YStack>
-            ) : creditHistory.length > 0 ? (
-              <YStack>
-                <YStack>
-                  {visibleTransactions.map((transaction: any) => (
-                    <CreditItem key={transaction.id} item={transaction} />
-                  ))}
-                </YStack>
-                
-                {creditHistory.length > 3 && (
-                  <Button 
-                    onPress={toggleCreditsExpanded}
-                    marginTop="$2"
-                    variant="outlined"
-                    borderColor={theme.cardBorder}
-                    backgroundColor="transparent"
-                    color={theme.text.primary}
-                    fontWeight="bold"
-                    hoverStyle={{ backgroundColor: theme.button.secondary.hoverBackground }}
-                    pressStyle={{ backgroundColor: theme.button.secondary.pressBackground }}
-                    icon={isCreditsExpanded ?
-                      <ChevronUp size={18} color={theme.text.primary} /> :
-                      <ChevronDown size={18} color={theme.text.primary} />
-                    }
-                    size="$3"
-                  >
-                    {isCreditsExpanded ? "Show Less" : "Show More"}
-                  </Button>
-                )}
-              </YStack>
-            ) : (
-              <Card 
-                padding="$4" 
-                bordered 
-                alignItems="center"
-                backgroundColor={theme.card}
-                borderColor={theme.cardBorder}
-              >
-                <Text 
-                  marginBottom="$2" 
-                  textAlign="center"
-                  color={theme.text.secondary}
-                >
-                  No credits history available.
-                </Text>
-                <Button 
-                  onPress={() => router.push('/credits')}
-                  backgroundColor={theme.button.primary.background}
-                  color={theme.button.primary.text}
-                  hoverStyle={{ backgroundColor: theme.button.primary.hoverBackground }}
-                  pressStyle={{ backgroundColor: theme.button.primary.pressBackground }}
-                  size="$3"
-                >
-                  Get Credits
-                </Button>
-              </Card>
-            )}
-          </YStack>
-            {/* App Settings */}
+          {/* App Settings */}
           <YStack space="$2">
             <H4 
               fontWeight="bold" 
@@ -393,11 +298,10 @@ export default function ProfileScreen() {
             
             {!isCheckingAccountType && hasPasswordAccount && (
               <Button 
+                variant="outlined"
+                borderColor={theme.tint}
+                color={theme.tint}
                 onPress={handleChangePassword} 
-                backgroundColor={theme.button.primary.background}
-                color={theme.button.primary.text}
-                hoverStyle={{ backgroundColor: theme.button.primary.hoverBackground }}
-                pressStyle={{ backgroundColor: theme.button.primary.pressBackground }}
                 fontWeight="400"
                 size="$4"
                 marginTop="$3"
@@ -406,12 +310,11 @@ export default function ProfileScreen() {
               </Button>
             )}
             <Button 
+              variant="outlined"
               onPress={hasPasswordAccount ? handleDeleteAccountWithPassword : handleDeleteAccountWithSocials} 
-              icon={isDeleting ? <Spinner color={theme.button.destructive.text} /> : <Trash2 size={18} color={theme.button.destructive.text} />}
-              backgroundColor={theme.button.destructive.background}
-              color={theme.button.destructive.text}
-              hoverStyle={{ backgroundColor: theme.button.destructive.hoverBackground }}
-              pressStyle={{ backgroundColor: theme.button.destructive.pressBackground }}
+              icon={isDeleting ? <Spinner color={theme.button.destructive.background} /> : <Trash2 size={18} color={theme.button.destructive.background} />}
+              borderColor={theme.button.destructive.background}
+              color={theme.button.destructive.background}
               disabled={isSessionLoading || isCheckingAccountType || isDeleting}
               fontWeight="400"
               size="$4"

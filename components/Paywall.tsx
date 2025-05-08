@@ -21,20 +21,17 @@ const Paywall = () => {
   };
 
   const onPurchaseCompletedWrapper = ({ customerInfo, storeTransaction }: { customerInfo: RNPurchasesCustomerInfo; storeTransaction: PurchasesStoreTransaction }) => {
-    console.log('Paywall.tsx: onPurchaseCompletedWrapper called with:', customerInfo, storeTransaction);
     const productIdentifier = storeTransaction.productIdentifier;
     if (productIdentifier) {
       handlePurchaseCompleted({
         customerInfo,
         productIdentifier: productIdentifier
       });
-    } else {
-      console.error('Paywall.tsx: Could not extract productIdentifier from storeTransaction', storeTransaction);
     }
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.background }}>
+    <View style={{ flex: 2, backgroundColor: theme.background }}>
       {isLoading && (
         <View style={{ 
           position: 'absolute', 

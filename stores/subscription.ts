@@ -19,6 +19,7 @@ interface ProStatusResponse {
   isProMember: boolean;
   proMembershipExpiresAt: string | null; // Date comes as string
   subscriptionInGracePeriod: boolean | null;
+  activeProductId: string | null; // Added activeProductId
 }
 
 interface SubscriptionState {
@@ -28,6 +29,7 @@ interface SubscriptionState {
   isActiveProMember: boolean; // Sourced from backend
   proMembershipExpiresAt: Date | null; // Store as Date object
   subscriptionInGracePeriod: boolean;
+  activeProductId: string | null; // Added activeProductId
   isLoading: boolean;
   error: string | null;
   fetchBalance: () => Promise<void>;
@@ -43,6 +45,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
   isActiveProMember: false,
   proMembershipExpiresAt: null,
   subscriptionInGracePeriod: false,
+  activeProductId: null, // Initialize activeProductId
   isLoading: false,
   error: null,
 
@@ -98,7 +101,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
       const headers = await getAuthHeaders();
       if (!headers.Cookie) {
         console.log('No auth cookie found, skipping fetchProStatus.');
-        set({ isLoading: false, isActiveProMember: false, proMembershipExpiresAt: null, subscriptionInGracePeriod: false, creditsBalance: 0 }); // Reset state on no auth
+        set({ isLoading: false, isActiveProMember: false, proMembershipExpiresAt: null, subscriptionInGracePeriod: false, creditsBalance: 0, activeProductId: null }); // Reset state on no auth
         return;
       }
       // Call the new backend endpoint
@@ -108,7 +111,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
 
       if (!response.ok) {
         if (response.status === 401) {
-          set({ isLoading: false, error: 'User not authenticated for pro status', isActiveProMember: false, proMembershipExpiresAt: null, subscriptionInGracePeriod: false, creditsBalance: 0 });
+          set({ isLoading: false, error: 'User not authenticated for pro status', isActiveProMember: false, proMembershipExpiresAt: null, subscriptionInGracePeriod: false, creditsBalance: 0, activeProductId: null });
           return;
         }
         const errorData = await response.text();
@@ -123,13 +126,14 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
         proMembershipExpiresAt: data.proMembershipExpiresAt ? new Date(data.proMembershipExpiresAt) : null,
         subscriptionInGracePeriod: data.subscriptionInGracePeriod ?? false, // Default to false if null
         creditsBalance: data.creditsBalance, // Update credits balance as well from this endpoint
+        activeProductId: data.activeProductId, // Store activeProductId
         isLoading: false,
         error: null, // Clear error on success
       });
     } catch (error) {
       console.error('Failed to fetch pro status:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch pro status';
-      set({ error: errorMessage, isLoading: false, isActiveProMember: false, proMembershipExpiresAt: null, subscriptionInGracePeriod: false }); // Reset on error
+      set({ error: errorMessage, isLoading: false, isActiveProMember: false, proMembershipExpiresAt: null, subscriptionInGracePeriod: false, activeProductId: null }); // Reset on error
     }
   },
 })); 
