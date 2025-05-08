@@ -1,13 +1,13 @@
 import React from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import RevenueCatUI from 'react-native-purchases-ui';
+import { PurchasesPackage, CustomerInfo as RNPurchasesCustomerInfo, PurchasesStoreTransaction } from 'react-native-purchases';
 import { useCredits } from '@/hooks/useCredits';
 import { useAppTheme } from '@/context/ThemeProvider';
 
 const Paywall = () => {
   const { 
     isLoading,
-    handlePurchaseStarted,
     handlePurchaseCompleted,
     handlePurchaseCancelled,
     handlePurchaseError,
@@ -15,6 +15,23 @@ const Paywall = () => {
   } = useCredits();
   const { getCurrentTheme } = useAppTheme();
   const theme = getCurrentTheme();
+
+  const onPurchaseStartedUILog = ({ packageBeingPurchased }: { packageBeingPurchased?: PurchasesPackage }) => {
+    console.log('RevenueCatUI.Paywall purchase started for package:', packageBeingPurchased?.product?.identifier);
+  };
+
+  const onPurchaseCompletedWrapper = ({ customerInfo, storeTransaction }: { customerInfo: RNPurchasesCustomerInfo; storeTransaction: PurchasesStoreTransaction }) => {
+    console.log('Paywall.tsx: onPurchaseCompletedWrapper called with:', customerInfo, storeTransaction);
+    const productIdentifier = storeTransaction.productIdentifier;
+    if (productIdentifier) {
+      handlePurchaseCompleted({
+        customerInfo,
+        productIdentifier: productIdentifier
+      });
+    } else {
+      console.error('Paywall.tsx: Could not extract productIdentifier from storeTransaction', storeTransaction);
+    }
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>
@@ -37,8 +54,8 @@ const Paywall = () => {
         style={{
           flex: 1,
         }}
-        onPurchaseStarted={handlePurchaseStarted}
-        onPurchaseCompleted={handlePurchaseCompleted}
+        onPurchaseStarted={onPurchaseStartedUILog}
+        onPurchaseCompleted={onPurchaseCompletedWrapper}
         onPurchaseCancelled={handlePurchaseCancelled}
         onPurchaseError={handlePurchaseError}
         onDismiss={handleDismiss}

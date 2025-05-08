@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import Purchases, { PurchasesStoreProduct } from 'react-native-purchases';
 import { ProductMetadata } from '@/utils/types';
 
@@ -14,7 +14,7 @@ export const ProductMetadataProvider: React.FC<{ children: React.ReactNode }> = 
   const [metadataMap, setMetadataMap] = useState<Record<string, ProductMetadata>>({});
   const [isLoading, setIsLoading] = useState(false);
 
-  const refreshMetadata = async () => {
+  const refreshMetadata = useCallback(async () => {
     setIsLoading(true);
     try {
       const offerings = await Purchases.getOfferings();
@@ -42,11 +42,11 @@ export const ProductMetadataProvider: React.FC<{ children: React.ReactNode }> = 
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     refreshMetadata();
-  }, []);
+  }, [refreshMetadata]);
 
   return (
     <ProductMetadataContext.Provider value={{ metadataMap, refreshMetadata, isLoading }}>

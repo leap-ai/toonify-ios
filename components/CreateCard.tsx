@@ -39,10 +39,16 @@ export interface CreateCardProps {
   isLoading: boolean;
   onPickImage: () => Promise<void>;
   onGenerate: () => Promise<void>;
-  variants: typeof VARIANT_OPTIONS;
+  variants: Array<{
+    label: string;
+    value: ImageVariantFrontend;
+    image: any; // Or a more specific ImageSourcePropType if possible
+    isPro: boolean;
+  }>;
   selectedVariant: ImageVariantFrontend;
   onVariantChange: (value: ImageVariantFrontend) => void;
   onDismissImage?: () => void;
+  isActiveProMember: boolean;
 }
 
 export default function CreateCard({
@@ -55,6 +61,7 @@ export default function CreateCard({
   selectedVariant,
   onVariantChange,
   onDismissImage,
+  isActiveProMember,
 }: CreateCardProps) {
   const { getCurrentTheme } = useAppTheme();
   const theme = getCurrentTheme();
@@ -198,41 +205,69 @@ export default function CreateCard({
               disablePassBorderRadius
               gap="$2.5"
             >
-              {variants.map((variant: VariantOption) => (
-                <ToggleGroup.Item 
-                  key={variant.value} 
-                  value={variant.value} 
-                  backgroundColor={selectedVariant === variant.value ? theme.button.primary.background : '$backgroundTransparent'}
-                  hoverStyle={{
-                    backgroundColor: selectedVariant === variant.value ? theme.button.primary.hoverBackground : '$backgroundHover',
-                  }}
-                  pressStyle={{
-                    backgroundColor: selectedVariant === variant.value ? theme.button.primary.pressBackground : '$backgroundPress',
-                  }}
-                  paddingVertical="$3"
-                  paddingHorizontal="$3"
-                  minWidth={120}
-                  borderRadius={"$4"}
-                >
-                  <YStack alignItems="center" space="$2.5">
-                    <Image 
-                      source={variant.image as ImageSourcePropType}
-                      style={[
-                          styles.variantImage,
-                          selectedVariant === variant.value && { borderColor: theme.tint, borderWidth: 2 }
-                      ]} 
-                    />
-                    <Text 
-                      color={selectedVariant === variant.value ? theme.button.primary.text : theme.text.secondary}
-                      fontSize="$3"
-                      fontWeight={selectedVariant === variant.value ? "bold" : "500"}
-                      textAlign="center"
-                    >
-                      {variant.label}
-                    </Text>
-                  </YStack>
-                </ToggleGroup.Item>
-              ))}
+              {variants.map((variant) => {
+                // Determine if the variant is a Pro feature and if the user has access
+                const isProFeature = variant.isPro;
+                const userHasProAccess = isActiveProMember;
+                const isDisabled = isProFeature && !userHasProAccess;
+
+                return (
+                  <ToggleGroup.Item 
+                    key={variant.value} 
+                    value={variant.value} 
+                    disabled={isDisabled} // Disable if it's a Pro feature and user doesn't have access
+                    backgroundColor={selectedVariant === variant.value ? theme.button.primary.background : '$backgroundTransparent'}
+                    hoverStyle={{
+                      backgroundColor: selectedVariant === variant.value 
+                        ? theme.button.primary.hoverBackground 
+                        : isDisabled ? '$backgroundTransparent' : '$backgroundHover',
+                    }}
+                    pressStyle={{
+                      backgroundColor: selectedVariant === variant.value 
+                        ? theme.button.primary.pressBackground 
+                        : isDisabled ? '$backgroundTransparent' : '$backgroundPress',
+                    }}
+                    paddingVertical="$3"
+                    paddingHorizontal="$3"
+                    minWidth={120}
+                    borderRadius={"$4"}
+                    // Apply opacity if disabled
+                    opacity={isDisabled ? 0.6 : 1} 
+                    // The YStack now contains the image, text, and potentially the Pro badge
+                  >
+                    <YStack alignItems="center" space="$2.5" position="relative"> 
+                      <Image 
+                        source={variant.image as ImageSourcePropType}
+                        style={[
+                            styles.variantImage,
+                            selectedVariant === variant.value && !isDisabled && { borderColor: theme.tint, borderWidth: 2 },
+                            // Optionally, add a specific style for disabled images if needed beyond opacity
+                        ]} 
+                      />
+                      <Text 
+                        color={selectedVariant === variant.value && !isDisabled 
+                                ? theme.button.primary.text 
+                                : (isDisabled ? theme.text.secondary : theme.text.secondary) }
+                        fontSize="$3"
+                        fontWeight={selectedVariant === variant.value && !isDisabled ? "bold" : "500"}
+                        textAlign="center"
+                      >
+                        {variant.label}
+                      </Text>
+
+                      {/* Pro Badge */}
+                      {isDisabled && (
+                        <View style={[
+                          styles.proBadgeContainer,
+                          { backgroundColor: theme.tint } // Use theme tint for badge background
+                        ]}>
+                          <Text style={styles.proBadgeText}>PRO</Text>
+                        </View>
+                      )}
+                    </YStack>
+                  </ToggleGroup.Item>
+                );
+              })}
             </ToggleGroup>
           </RNScrollView>
         </YStack>
@@ -327,9 +362,9 @@ const styles = StyleSheet.create({
     zIndex: 20,
   },
   variantImage: {
-    width: 100, 
-    height: 100, 
-    borderRadius: 6,
+    width: 80,
+    height: 80,
+    borderRadius: 10,
   },
   toggleGroupContainer: {
     paddingHorizontal: 1,
@@ -341,5 +376,26 @@ const styles = StyleSheet.create({
   errorText: {
     marginTop: 10,
     textAlign: 'center',
-  }
+  },
+  infoSection: { /* ... */ },
+  tipsList: { /* ... */ },
+  tipItem: { /* ... */ },
+  proBadgeContainer: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    elevation: 2, // For Android shadow
+    shadowColor: '#000', // For iOS shadow
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1,
+  },
+  proBadgeText: {
+    color: 'white', // Assuming tint background is dark enough for white text
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
 }); 

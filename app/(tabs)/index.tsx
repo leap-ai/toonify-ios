@@ -9,15 +9,21 @@ import {
   registerForPushNotificationsAsync, 
   schedulePushNotification 
 } from '@/utils/notifications';
+import { useCredits } from '@/hooks/useCredits';
 
 // Define frontend variant type and options
 export type ImageVariantFrontend = 'pixar' | 'ghiblix' | 'sticker' | 'plushy';
 
-export const VARIANT_OPTIONS: { label: string; value: ImageVariantFrontend; image: any }[] = [
-  { label: 'Ghibli', value: 'ghiblix', image: require('@/assets/images/ghiblix.png') },
-  { label: 'Sticker', value: 'sticker', image: require('@/assets/images/sticker.png') },
-  { label: 'Pixar', value: 'pixar', image: require('@/assets/images/pixar.png') },
-  { label: 'Plushy', value: 'plushy', image: require('@/assets/images/plushy.png') },
+export const VARIANT_OPTIONS: { 
+  label: string; 
+  value: ImageVariantFrontend; 
+  image: any; 
+  isPro: boolean;
+}[] = [
+  { label: 'Ghibli', value: 'ghiblix', image: require('@/assets/images/ghiblix.png'), isPro: false },
+  { label: 'Sticker', value: 'sticker', image: require('@/assets/images/sticker.png'), isPro: true },
+  { label: 'Pixar', value: 'pixar', image: require('@/assets/images/pixar.png'), isPro: true },
+  { label: 'Plushy', value: 'plushy', image: require('@/assets/images/plushy.png'), isPro: true },
 ];
 
 export default function GenerateScreen() {
@@ -30,11 +36,12 @@ export default function GenerateScreen() {
     error,
     clearError,
   } = useGenerationStore();
+  const { isLoading: isCreditsLoading } = useCredits();
 
   const [localError, setLocalError] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedVariant, setSelectedVariant] = useState<ImageVariantFrontend>(VARIANT_OPTIONS[0].value);
-
+  
   useEffect(() => {
     registerForPushNotificationsAsync();
   }, []);
@@ -49,7 +56,7 @@ export default function GenerateScreen() {
   );
 
   const handleDismissImage = () => {
-    setSelectedImage(null);
+      setSelectedImage(null);
     setLocalError(null); 
   };
 
@@ -88,7 +95,7 @@ export default function GenerateScreen() {
       await generateImage(selectedImage, selectedVariant);
       const genError = useGenerationStore.getState().error;
       if (!genError) {
-        router.push('/(tabs)/history');
+      router.push('/(tabs)/history');
         schedulePushNotification('Toonified Picture Ready!', `Open app to see your new ${selectedVariant} image.`);
         setSelectedImage(null);
         setLocalError(null);
@@ -97,9 +104,9 @@ export default function GenerateScreen() {
       console.error('Error during generateImage call in component:', err);
       if (!useGenerationStore.getState().error) {
         const errorMessage = 'Failed to generate image. Please try again.';
-        setLocalError(errorMessage);
-        Alert.alert('Error', errorMessage);
-      }
+      setLocalError(errorMessage);
+      Alert.alert('Error', errorMessage);
+    }
     }
   };
   
@@ -109,13 +116,14 @@ export default function GenerateScreen() {
         <CreateCard 
           error={localError}
           selectedImage={selectedImage}
-          isLoading={isGeneratingInBackground}
+          isLoading={isGeneratingInBackground || isCreditsLoading}
           onPickImage={pickImage}
           onGenerate={handleGenerate}
           variants={VARIANT_OPTIONS}
           selectedVariant={selectedVariant}
           onVariantChange={setSelectedVariant}
           onDismissImage={handleDismissImage}
+          isActiveProMember={false}
         />
       </ScrollView>
     </View>
