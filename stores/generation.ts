@@ -13,34 +13,37 @@ export interface Generation {
 interface GenerationState {
   generations: Generation[];
   isLoading: boolean;
+  isGeneratingInBackground: boolean;
   error: string | null;
-  generateImage: (imageUrl: string) => Promise<void>;
+  generateImage: (imageUrl: string, variant: string) => Promise<void>;
   fetchGenerations: () => Promise<void>;
   deleteGeneration: (id: number) => Promise<boolean>;
+  clearError: () => void;
 }
 
-export const useGenerationStore = create<GenerationState>((set) => ({
+export const useGenerationStore = create<GenerationState>((set, get) => ({
   generations: [],
   isLoading: false,
+  isGeneratingInBackground: false,
   error: null,
 
-  generateImage: async (imageUrl: string) => {
+  generateImage: async (imageUrl: string, variant: string) => {
+    set({ isGeneratingInBackground: true, error: null });
+    console.log('Starting image generation process (background state active)...');
+    
     try {
-      set({ isLoading: true, error: null });
-      console.log('Starting image generation process...');
-      
-      // Create form data with image Uri
       const formData = new FormData();
       formData.append('image', {
         uri: imageUrl,
         name: 'upload.jpg',
         type: 'image/jpeg',
       } as any);
+      formData.append('variant', variant);
       
       console.log('Sending request to backend...');
       const headers = await getAuthHeaders();
       const response = await axios.post(`${API_URL}/api/generation/generate`, formData, {
-        timeout: 200000, // 200 second timeout for image processing
+        timeout: 200000,
         headers: {
           ...headers,
           'Content-Type': 'multipart/form-data',
@@ -66,9 +69,10 @@ export const useGenerationStore = create<GenerationState>((set) => ({
         errorMessage = error.message;
       }
       
-      set({ error: errorMessage });
+      set({ error: errorMessage, isGeneratingInBackground: false });
     } finally {
-      set({ isLoading: false });
+      set({ isGeneratingInBackground: false });
+      console.log('Image generation process finished (background state inactive).');
     }
   },
 
@@ -89,38 +93,23 @@ export const useGenerationStore = create<GenerationState>((set) => ({
   deleteGeneration: async (id: number) => {
     try {
       set({ isLoading: true, error: null });
-      
-      // Get auth headers
       const headers = await getAuthHeaders();
-      
-      // Call the delete API
       await axios.delete(`${API_URL}/api/generation/${id}`, { headers });
-      
-      // Update the local state by removing the deleted generation
       set((state) => ({
-        generations: state.generations.filter(generation => generation.id !== id)
+        generations: state.generations.filter(generation => generation.id !== id),
+        isLoading: false,
       }));
-      
       console.log('Generation deleted successfully');
       return true;
     } catch (error: any) {
-      console.error('Delete generation error details:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      });
-      
+      console.error('Delete generation error details:', error.response?.data);
       let errorMessage = 'Failed to delete generation';
       if (error.response?.data?.error) {
         errorMessage = error.response.data.error;
-      } else if (error.message) {
-        errorMessage = error.message;
       }
-      
-      set({ error: errorMessage });
+      set({ error: errorMessage, isLoading: false });
       return false;
-    } finally {
-      set({ isLoading: false });
     }
-  }
+  },
+  clearError: () => set({ error: null }),
 })); 

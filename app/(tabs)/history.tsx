@@ -79,7 +79,7 @@ export default function HistoryScreen() {
           chromeless
           marginRight="$2"
         />
-        <H4 color={theme.text.primary} fontWeight="bold">Your Cartoons</H4>
+        <H4 color={theme.text.primary} fontWeight="bold">Gallery</H4>
       </XStack>
       
       {generations.length === 0 ? (
@@ -105,7 +105,7 @@ export default function HistoryScreen() {
               onPress={() => router.push('/')}
               fontWeight="bold"
               backgroundColor={theme.tint}
-              color={theme.background}
+              color={theme.button.primary.text}
             >
               Generate Your First Cartoon
             </Button>

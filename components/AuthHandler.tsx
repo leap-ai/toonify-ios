@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useSegments } from 'expo-router';
 import { authClient } from '@/stores/auth';
 import Purchases from 'react-native-purchases';
+import { useSubscriptionStore } from '@/stores/subscription';
 
 // Function to handle RevenueCat login 
 const handleRevenueCatLogin = async (userId: string) => {
@@ -27,45 +28,53 @@ const AuthHandler = () => {
     const { data: session, isPending: isAuthLoading } = authClient.useSession();
     const segments = useSegments();
     const router = useRouter();
-    // State to prevent calling RC login multiple times on rapid state changes
-    const [rcLoginAttemptedForUser, setRcLoginAttemptedForUser] = useState<string | null>(null);
+    const [isNavigationReady, setIsNavigationReady] = useState(false);
+    // Get the fetch action from the subscription store
+    const fetchProStatus = useSubscriptionStore((state) => state.fetchProStatus);
+    // State to track if setup has been done for the current user
+    const [setupDoneForUser, setSetupDoneForUser] = useState<string | null>(null);
 
     useEffect(() => {
-        // Don't run logic until auth state is determined
-        if (isAuthLoading) {
-            return;
+        if (router && segments) {
+            setIsNavigationReady(true);
         }
+    }, [router, segments]);
+
+    useEffect(() => {
+        if (!isNavigationReady || isAuthLoading) return;
 
         const inAuthGroup = segments[0] === '(auth)';
-        const isLegalRoute = segments[0] === 'legal';
         const currentUserId = session?.user?.id;
 
-        // --- Side Effects based on Auth State ---
         if (currentUserId) {
-            // User is logged in
-            
-            // 1. RevenueCat Login (if needed)
-            if (!inAuthGroup && rcLoginAttemptedForUser !== currentUserId) {
+            // --- Run Setup only once per user ID --- 
+            if (setupDoneForUser !== currentUserId) {
+                console.log(`AuthHandler: Running setup for user ${currentUserId}`);
                 handleRevenueCatLogin(currentUserId);
-                setRcLoginAttemptedForUser(currentUserId); // Mark attempted for this user ID
+                fetchProStatus(); // Fetch pro status from backend
+                setSetupDoneForUser(currentUserId); // Mark setup as done for this user
             }
-
-            // 2. Redirect if they are in the auth group
+            // --- End Setup Logic ---
+            
+            // Navigation logic (runs based on segments potentially)
             if (inAuthGroup) {
                 router.replace('/(tabs)');
             }
         } else {
             // User is logged out
-            setRcLoginAttemptedForUser(null); // Reset RC login attempt state on logout
-
-            // 3. Redirect to auth group if they are outside and not on legal page
-            if (!inAuthGroup && !isLegalRoute) {
+            if (setupDoneForUser !== null) {
+                 console.log("AuthHandler: Clearing setup state on logout.");
+                 setSetupDoneForUser(null); // Reset setup state on logout
+            }
+           
+            // Optionally clear subscription state on logout if needed
+            // useSubscriptionStore.getState().reset(); // Example: Add a reset action if desired
+            if (!inAuthGroup && segments[0] !== 'legal') {
                 router.replace('/(auth)');
             }
         }
-        // --- End Side Effects ---
-
-    }, [session, isAuthLoading, segments, router, rcLoginAttemptedForUser]);
+        // Dependency array includes everything needed for the logic inside
+    }, [session, isAuthLoading, segments, router, isNavigationReady, fetchProStatus, setupDoneForUser]);
 
     // This component does not render anything
     return null;

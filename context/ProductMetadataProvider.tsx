@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import Purchases, { PurchasesStoreProduct } from 'react-native-purchases';
 import { ProductMetadata } from '@/utils/types';
 
@@ -13,40 +13,46 @@ const ProductMetadataContext = createContext<ProductMetadataContextType | null>(
 export const ProductMetadataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [metadataMap, setMetadataMap] = useState<Record<string, ProductMetadata>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [isMetadataFetched, setIsMetadataFetched] = useState(false);
 
-  const refreshMetadata = async () => {
+  const refreshMetadata = useCallback(async () => {
+    if (isMetadataFetched) {
+        return; 
+    }
+
+    console.log('Attempting to fetch Product Metadata...');
     setIsLoading(true);
     try {
       const offerings = await Purchases.getOfferings();
-      // const offerings = { current: { availablePackages: [{ product: { identifier: 'test', title: 'Test', price: 1.99, priceString: '$1.99' } }] } };
       const current = offerings.current;
 
       if (current && current.availablePackages.length > 0) {
         const map: Record<string, ProductMetadata> = {};
         current.availablePackages.forEach(pkg => {
           const product: PurchasesStoreProduct = pkg.product;
-          // const product: any = pkg.product;
           map[product.identifier] = {
             name: product.title,
-            price: product.price,            // number (e.g., 1.99)
-            priceString: product.priceString // localized (e.g., $1.99)
+            price: product.price,
+            priceString: product.priceString
           };
         });
         console.log('Fetched Product Metadata:', map);
         setMetadataMap(map);
+        setIsMetadataFetched(true);
       } else {
         console.log('No current offering or packages found.');
+        setIsMetadataFetched(true); 
       }
     } catch (e) {
       console.error('Failed to fetch product metadata:', e);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [isMetadataFetched]);
 
   useEffect(() => {
     refreshMetadata();
-  }, []);
+  }, [refreshMetadata]);
 
   return (
     <ProductMetadataContext.Provider value={{ metadataMap, refreshMetadata, isLoading }}>
