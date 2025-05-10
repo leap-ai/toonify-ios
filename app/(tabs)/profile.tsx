@@ -295,7 +295,9 @@ export default function ProfileScreen() {
             >
               Account Settings
             </H4>
-            
+            {isCheckingAccountType && (
+              <Spinner size="small" color={theme.tint} />
+            )}
             {!isCheckingAccountType && hasPasswordAccount && (
               <Button 
                 variant="outlined"
@@ -370,7 +372,7 @@ export default function ProfileScreen() {
                   borderColor={theme.cardBorder}
                   borderWidth={1}
                 >
-                  {isUploading ? 'Uploading...' : 'Edit Photo'}
+                  {isUploading ? 'Uploading...' : 'Edit Profile Picture'}
                 </Button>
               )}
             </View>
