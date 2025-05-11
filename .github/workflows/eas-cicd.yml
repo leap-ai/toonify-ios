@@ -1,4 +1,4 @@
-name: EAS CI/CD for iOS
+name: Toonify iOS EAS build - CI
 
 on:
   pull_request:
@@ -11,7 +11,7 @@ on:
 
 jobs:
   development_build:
-    name: Create Development Build (iOS)
+    name: Development Build
     if: github.event_name == 'pull_request' # Only run this job for pull request events
     runs-on: ubuntu-latest
     permissions:
@@ -54,7 +54,7 @@ jobs:
         # }
 
   production_build_and_submit:
-    name: Create Production Build and Submit to TestFlight (iOS)
+    name: Production Build and Submit to TestFlight
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' # Only run on push to main branch
     runs-on: ubuntu-latest
     permissions:
