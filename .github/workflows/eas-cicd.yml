@@ -59,18 +59,78 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write      # To commit version bump
-      pull-requests: read  # To read PR labels
+      pull-requests: read  # To read PR labels when event is pull_request_target or to fetch PR details
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 
+          token: ${{ secrets.GITHUB_TOKEN }} # Ensure token is available for commit push and API calls if needed by other steps
+
+      - name: Determine Increment Type
+        id: determine_increment
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            let incrementType = 'patch'; // Default
+            const prLabels = [];
+
+            if (context.eventName === 'pull_request' && context.payload.pull_request && context.payload.pull_request.merged) {
+              console.log('Triggered by merged pull request event.');
+              if (context.payload.pull_request.labels && context.payload.pull_request.labels.length > 0) {
+                context.payload.pull_request.labels.forEach(label => prLabels.push(label.name.toLowerCase()));
+              }
+            } else if (context.eventName === 'push' && context.ref === 'refs/heads/main') {
+              console.log('Triggered by push to main event.');
+              const commitMessage = context.payload.head_commit.message;
+              const prNumberMatch = commitMessage.match(/Merge pull request #(\d+)/);
+
+              if (prNumberMatch && prNumberMatch[1]) {
+                const prNumber = parseInt(prNumberMatch[1]);
+                console.log(`Extracted PR number: ${prNumber} from commit message.`);
+                try {
+                  const { data: pullRequest } = await github.rest.pulls.get({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    pull_number: prNumber,
+                  });
+                  if (pullRequest.labels && pullRequest.labels.length > 0) {
+                    pullRequest.labels.forEach(label => prLabels.push(label.name.toLowerCase()));
+                  }
+                } catch (error) {
+                  console.warn(`Could not fetch details for PR #${prNumber}: ${error.message}. Defaulting to patch.`);
+                }
+              } else {
+                console.log('Push to main was not a standard PR merge commit or PR number could not be extracted. Defaulting to patch.');
+              }
+            }
+
+            console.log('Found labels:', prLabels);
+            if (prLabels.includes('major')) {
+              incrementType = 'major';
+            } else if (prLabels.includes('minor')) {
+              incrementType = 'minor';
+            } else if (prLabels.includes('patch')) {
+              incrementType = 'patch';
+            } // Defaults to patch if no relevant label is found
+            
+            console.log(`Determined increment type: ${incrementType}`);
+            core.setOutput('increment_type', incrementType);
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18.x
-      
+        working-directory: ./frontend-mobile
+        run: node ./scripts/bump-version.js
+        env:
+          INCREMENT_TYPE: ${{ steps.determine_increment.outputs.increment_type }}
+          GITHUB_USER_NAME: 'github-actions[bot]'
+          GITHUB_USER_EMAIL: 'github-actions[bot]@users.noreply.github.com'
+
       - name: Set up Bun
         uses: oven-sh/setup-bun@v1
         with:
