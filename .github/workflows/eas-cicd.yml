@@ -35,6 +35,8 @@ jobs:
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
+          package-manager: bun
+          packager: bun
 
       - name: Install dependencies
         run: bun install --frozen-lockfile # Use --frozen-lockfile for reproducible builds
@@ -76,6 +78,7 @@ jobs:
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
+          package-manager: bun
           packager: bun
           # Optionally, configure Apple credentials here if needed for CI, using GitHub secrets:
           # apple-api-key-path: ${{ secrets.EXPO_ASC_API_KEY_PATH }}
