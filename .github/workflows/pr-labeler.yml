@@ -1,31 +1,20 @@
-name: PR Labeler
+name: "Label New Pull Requests"
 
 on:
-  pull_request_target: # Use pull_request_target to allow labeling by the action
-    types:
-      - opened
-
-permissions:
-  contents: read
-  pull-requests: write # Required to add labels
+  pull_request:
+    types: [opened]
 
 jobs:
-  label:
+  add-label:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout # Not strictly necessary for TimonVS/pr-labeler but good practice
-        uses: actions/checkout@v4
-
-      - name: Label PR with default
-        uses: TimonVS/pr-labeler@v5 # Using v5, check for the latest stable version
+      - name: Add default label
+        uses: actions/github-script@v7
         with:
-          configuration-path: .github/pr-labeler-config.yml # Path to the labeler configuration file
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-
-      # Optional: If you want to also label based on file paths (e.g., add 'backend' label if backend files change)
-      # you could add another step here using actions/labeler
-      # - name: Label based on changed files
-      #   uses: actions/labeler@v5
-      #   with:
-      #     repo-token: ${{ secrets.GITHUB_TOKEN }}
-      #     configuration-path: .github/labeler-config.yml # A different config for path-based labeling
+          script: |
+            github.rest.issues.addLabels({
+              issue_number: context.payload.pull_request.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ["patch"]
+            });
