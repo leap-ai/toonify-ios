@@ -13,6 +13,7 @@ async function run() {
     console.log('Env Vars', githubEventName, githubEventPath);
     if (githubEventName === 'push' && githubEventPath) {
       const eventData = JSON.parse(fs.readFileSync(githubEventPath, 'utf8'));
+      console.log('Event Data', eventData);
       if (eventData.pull_request && eventData.pull_request.labels && eventData.pull_request.labels.length > 0) {
         const labels = eventData.pull_request.labels.map(label => label.name.toLowerCase());
         console.log('PR Labels:', labels);
