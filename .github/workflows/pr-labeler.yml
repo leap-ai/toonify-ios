@@ -1,0 +1,27 @@
+name: PR Default Labeler
+    
+    on:
+      pull_request_target: # Use pull_request_target for permissions to label
+        types: [opened]
+    
+    permissions:
+      pull-requests: write # Permission to add labels
+      contents: read # Usually needed by actions that inspect PRs
+    
+    jobs:
+      label:
+        name: Add default 'patch' label
+        runs-on: ubuntu-latest
+        steps:
+          - name: Add 'patch' label
+            uses: actions/github-script@v7 # A versatile action to run scripts
+            with:
+              script: |
+                github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  labels: ['patch']
+                });
+                console.log('Added "patch" label to PR #${context.issue.number}');
+              github-token: ${{ secrets.GITHUB_TOKEN }}
