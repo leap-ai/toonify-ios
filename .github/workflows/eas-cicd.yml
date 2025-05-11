@@ -4,15 +4,13 @@ on:
   pull_request:
     branches:
       - main
-    types: [opened, synchronize, reopened] # Trigger on PR creation, updates, and reopening
-  push:
-    branches:
-      - main
+    types: [opened, synchronize, reopened, closed] # Added 'closed' for production job on merge
 
 jobs:
   development_build:
     name: Development Build
-    if: github.event_name == 'pull_request' # Only run this job for pull request events
+    # Run on PR open, update, or reopen
+    if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize' || github.event.action == 'reopened')
     runs-on: ubuntu-latest
     permissions:
       contents: read # Needed for checkout
@@ -55,19 +53,20 @@ jobs:
 
   production_build_and_submit:
     name: Create Production Build and Submit to TestFlight (iOS)
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true)
+    # Run only when a PR to main is closed and merged
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     permissions:
       contents: write      # To commit version bump
-      pull-requests: read  # To read PR labels when event is pull_request_target or to fetch PR details
+      pull-requests: read  # To read PR labels
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 
-          token: ${{ secrets.GITHUB_TOKEN }} # Ensure token is available for commit push and API calls if needed by other steps
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Determine Increment Type
+      - name: Determine Increment Type from PR Labels
         id: determine_increment
         uses: actions/github-script@v7
         with:
@@ -76,37 +75,12 @@ jobs:
             let incrementType = 'patch'; // Default
             const prLabels = [];
 
-            if (context.eventName === 'pull_request' && context.payload.pull_request && context.payload.pull_request.merged) {
-              console.log('Triggered by merged pull request event.');
-              if (context.payload.pull_request.labels && context.payload.pull_request.labels.length > 0) {
-                context.payload.pull_request.labels.forEach(label => prLabels.push(label.name.toLowerCase()));
-              }
-            } else if (context.eventName === 'push' && context.ref === 'refs/heads/main') {
-              console.log('Triggered by push to main event.');
-              const commitMessage = context.payload.head_commit.message;
-              const prNumberMatch = commitMessage.match(/Merge pull request #(\d+)/);
-
-              if (prNumberMatch && prNumberMatch[1]) {
-                const prNumber = parseInt(prNumberMatch[1]);
-                console.log(`Extracted PR number: ${prNumber} from commit message.`);
-                try {
-                  const { data: pullRequest } = await github.rest.pulls.get({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    pull_number: prNumber,
-                  });
-                  if (pullRequest.labels && pullRequest.labels.length > 0) {
-                    pullRequest.labels.forEach(label => prLabels.push(label.name.toLowerCase()));
-                  }
-                } catch (error) {
-                  console.warn(`Could not fetch details for PR #${prNumber}: ${error.message}. Defaulting to patch.`);
-                }
-              } else {
-                console.log('Push to main was not a standard PR merge commit or PR number could not be extracted. Defaulting to patch.');
-              }
+            console.log('Triggered by pull_request event for production build.');
+            if (context.payload.pull_request.labels && context.payload.pull_request.labels.length > 0) {
+              context.payload.pull_request.labels.forEach(label => prLabels.push(label.name.toLowerCase()));
             }
 
-            console.log('Found labels:', prLabels);
+            console.log('Found PR labels:', prLabels);
             if (prLabels.includes('major')) {
               incrementType = 'major';
             } else if (prLabels.includes('minor')) {
@@ -115,7 +89,7 @@ jobs:
               incrementType = 'patch';
             } // Defaults to patch if no relevant label is found
             
-            console.log(`Determined increment type: ${incrementType}`);
+            console.log(`Determined increment type for production: ${incrementType}`);
             core.setOutput('increment_type', incrementType);
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -123,13 +97,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18.x
-        working-directory: ./frontend-mobile
-        run: node ./scripts/bump-version.js
-        env:
-          INCREMENT_TYPE: ${{ steps.determine_increment.outputs.increment_type }}
-          GITHUB_USER_NAME: 'github-actions[bot]'
-          GITHUB_USER_EMAIL: 'github-actions[bot]@users.noreply.github.com'
+          node-version: 18.x # Or your preferred LTS version
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v1
@@ -147,14 +115,12 @@ jobs:
       - name: Install jq (for commit message version reading)
         run: sudo apt-get update && sudo apt-get install -y jq
 
-      - name: Bump version based on PR labels or push
-        id: version_bumper
-        # The script is in scripts/bump-version.js
-        # bun run is executed from workspace root, script path is relative to root
-        run: bun run ./scripts/bump-version.js 
+      - name: Run Version Bump Script # Renamed and corrected
+        id: version_bumper # Keeping id in case it's used, though script output for commit is handled differently
+        run: node frontend-mobile/scripts/bump-version.js # Correctly call the script with node
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # GITHUB_EVENT_PATH and GITHUB_EVENT_NAME are default
-      
+          INCREMENT_TYPE: ${{ steps.determine_increment.outputs.increment_type }} # Pass the determined increment type
+
       - name: Commit and Push version bump
         run: |
           echo "Attempting to commit version bump..."
