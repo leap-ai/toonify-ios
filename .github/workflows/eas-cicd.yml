@@ -1,0 +1,118 @@
+name: EAS CI/CD for iOS
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened] # Trigger on PR creation, updates, and reopening
+  push:
+    branches:
+      - main
+
+jobs:
+  development_build:
+    name: Create Development Build (iOS)
+    if: github.event_name == 'pull_request' # Only run this job for pull request events
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # Needed for checkout
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18.x # Or your preferred LTS version
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Setup Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+          package-manager: bun
+          packager: bun
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile # Use --frozen-lockfile for reproducible builds
+
+      - name: Create iOS Development Build
+        run: eas build -p ios --profile development --non-interactive --no-wait
+        # Ensure you have a 'development' profile in eas.json configured for iOS development builds.
+        # Example eas.json development profile for iOS:
+        # "development": {
+        #   "developmentClient": true,
+        #   "distribution": "internal",
+        #   "ios": {
+        #     "simulator": false 
+        #   }
+        # }
+
+  production_build_and_submit:
+    name: Create Production Build and Submit to TestFlight (iOS)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' # Only run on push to main branch
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # Needed for checkout
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18.x # Or your preferred LTS version
+      
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Setup Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+          package-manager: bun
+          packager: bun
+          # Optionally, configure Apple credentials here if needed for CI, using GitHub secrets:
+          # apple-api-key-path: ${{ secrets.EXPO_ASC_API_KEY_PATH }}
+          # apple-api-key-id: ${{ secrets.EXPO_ASC_KEY_ID }}
+          # apple-api-issuer-id: ${{ secrets.EXPO_ASC_ISSUER_ID }}
+          # apple-team-id: ${{ secrets.EXPO_APPLE_TEAM_ID }}
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Create iOS Production Build
+        run: eas build -p ios --profile production --non-interactive --wait
+        # Ensure you have a 'production' profile in eas.json configured for iOS production builds.
+        # This command waits for the build to complete.
+
+      - name: Submit iOS Production Build to TestFlight
+        run: eas submit -p ios --profile production --latest --non-interactive
+        # This command submits the latest build for the 'production' profile.
+        # Ensure your eas.json 'production' profile's submit section is configured for TestFlight.
+        # Example eas.json production profile for iOS with submit configuration:
+        # "production": {
+        #   "distribution": "store",
+        #   "ios": {
+        #      "enterpriseProvisioning": "adhoc" // or "universal" depending on your setup for TestFlight
+        #   },
+        #   "submit": {
+        #     "production": { // This key matches the eas submit --profile <name>
+        #       "ios": {
+        #         "appleId": "your-apple-id@example.com", // Store in secrets if sensitive
+        #         "ascAppId": "your-app-specific-id",    // Store in secrets if sensitive
+        #         "appleTeamId": "${{ secrets.EXPO_APPLE_TEAM_ID }}" // Can also be a secret
+        #       }
+        #     }
+        #   }
+        # }
+        # Note: For EAS Submit, if you use app-specific passwords or API keys for Apple,
+        # ensure they are correctly configured in your EAS project settings or via environment variables/secrets. 
