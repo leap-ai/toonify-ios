@@ -40,45 +40,40 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile # Use --frozen-lockfile for reproducible builds
 
-      - name: Create iOS Development Build and Capture URL
-        id: eas_dev_build
-        run: |
-          output=$(eas build -p ios --profile development --non-interactive --no-wait)
-          echo "--- Full EAS Build output ---"
-          echo "$output"
-          echo "--- End of Full EAS Build output ---"
-          
-          # Previous method:
-          # build_url=$(echo "$output" | grep -o 'https://expo.dev/accounts/[^/]+/projects/[^/]+/builds/[^ ]*' | tail -n 1)
-          
-          # New method: Grep for the line and use sed to extract the URL
-          build_url=$(echo "$output" | grep 'Build details: https://expo.dev' | sed 's/.*Build details: //')
+      - name: Create iOS Development Build
+        # This step now waits for the build to complete on EAS
+        run: eas build -p ios --profile development --non-interactive --wait
 
-          echo "Attempted extracted URL: [$build_url]"
-
-          if [ -n "$build_url" ]; then
-            echo "Captured build URL: $build_url"
-            echo "build_url=$build_url" >> $GITHUB_OUTPUT
-          else
-            echo "Could not capture build URL."
-            exit 1
-          fi
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
 
       - name: Install qrcode-terminal
         run: bun install -g qrcode-terminal
+      
+      - name: Get Latest iOS Dev Build Install URL
+        id: get_install_url
+        run: |
+          # Fetches the latest completed iOS development build for the 'dev' channel.
+          # Ensure your 'development' profile in eas.json is associated with this channel or adjust accordingly.
+          # The EXPO_TOKEN is usually picked up automatically by eas-cli after the setup-expo action.
+          BUILD_INFO_JSON=$(eas build:list --platform ios --status finished --channel dev --distribution internal --limit 1 --json)
+          echo "Build Info JSON: $BUILD_INFO_JSON"
+          INSTALL_URL=$(echo $BUILD_INFO_JSON | jq -r 'map(select(.artifacts.buildUrl != null)) | .[0].artifacts.buildUrl')
+          
+          if [ -z "$INSTALL_URL" ] || [ "$INSTALL_URL" == "null" ]; then
+            echo "::error::Could not retrieve a valid install URL. Please check EAS build list and ensure a recent successful build for this profile/channel exists."
+            echo "Full build list output for debugging:"
+            eas build:list --platform ios --status finished --channel dev --distribution internal --limit 5
+            exit 1
+          fi
+          echo "Install URL: $INSTALL_URL"
+          echo "build_url=$INSTALL_URL" >> $GITHUB_OUTPUT
 
-      - name: Generate QR Code for Build Details Page
-        if: steps.eas_dev_build.outputs.build_url
-        run: qrcode-terminal --small "${{ steps.eas_dev_build.outputs.build_url }}"
-        # Ensure you have a 'development' profile in eas.json configured for iOS development builds.
-        # Example eas.json development profile for iOS:
-        # "development": {
-        #   "developmentClient": true,
-        #   "distribution": "internal",
-        #   "ios": {
-        #     "simulator": false 
-        #   }
-        # }
+      - name: Show Install QR Code in Log
+        if: steps.get_install_url.outputs.build_url
+        run: |
+          echo "📱 Scan this QR code with your provisioned iPhone to install the iOS development build:"
+          qrcode-terminal --small "${{ steps.get_install_url.outputs.build_url }}"
 
   production_build_and_submit:
     name: Create Production Build and Submit to TestFlight (iOS)
