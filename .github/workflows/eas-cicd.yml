@@ -49,8 +49,15 @@ jobs:
           # Ensure eas-cli is logged in (expo/expo-github-action should handle this)
           # The output of 'eas build --json' when starting a new build is an array with one build object.
           BUILD_INFO_JSON=$(eas build -p ios --profile development --non-interactive --json --no-wait)
-          echo "EAS Build Start JSON: $BUILD_INFO_JSON"
-          BUILD_ID=$(echo "$BUILD_INFO_JSON" | jq -r 'map(select(.id != null)) | .[0].id')
+          echo "Raw EAS Build Start JSON: $BUILD_INFO_JSON"
+          # Try to determine if it's an array or object for .id extraction
+          if echo "$BUILD_INFO_JSON" | jq -e 'if type=="array" then .[0].id else .id end' > /dev/null; then
+            BUILD_ID=$(echo "$BUILD_INFO_JSON" | jq -r 'if type=="array" then .[0].id else .id end')
+          else
+            echo "::error::Could not parse BUILD_ID from EAS build submission. JSON structure might be unexpected."
+            exit 1
+          fi
+
           if [ -z "$BUILD_ID" ] || [ "$BUILD_ID" == "null" ]; then
             echo "::error::Could not retrieve BUILD_ID from EAS build submission."
             exit 1
@@ -72,9 +79,19 @@ jobs:
           until [[ "$STATUS" == "finished" || "$STATUS" == "errored" || "$STATUS" == "canceled" ]]; do # Added canceled
             echo "⏳ Waiting for build $BUILD_ID to finish... (current status: $STATUS)"
             sleep 30
-            BUILD_INSPECT_JSON=$(eas build:inspect $BUILD_ID --json)
-            echo "Build Inspect JSON: $BUILD_INSPECT_JSON" # For debugging
-            STATUS=$(echo "$BUILD_INSPECT_JSON" | jq -r '.status')
+            # Attempt to capture output even if the command fails
+            BUILD_INSPECT_OUTPUT=$(eas build:inspect $BUILD_ID --json --debug 2>&1) || true 
+            echo "Raw Build Inspect Output (eas build:inspect): $BUILD_INSPECT_OUTPUT"
+            # Check if the output is valid JSON before trying to parse status
+            if echo "$BUILD_INSPECT_OUTPUT" | jq -e '.status' > /dev/null; then
+              STATUS=$(echo "$BUILD_INSPECT_OUTPUT" | jq -r '.status')
+            else 
+              echo "::warning::Build inspect output was not valid JSON or did not contain .status. Output: $BUILD_INSPECT_OUTPUT"
+              # If inspect fails consistently, this loop might run indefinitely or until timeout.
+              # Consider adding a max attempts counter here if this becomes a persistent issue.
+              STATUS="unknown_error" # Set a status to break or handle appropriately
+            fi
+
             if [ -z "$STATUS" ] || [ "$STATUS" == "null" ]; then
               echo "::warning::Could not determine build status. Retrying..."
               STATUS="pending" # Assume pending to retry
