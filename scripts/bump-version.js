@@ -11,7 +11,7 @@ async function run() {
 
     let incrementType = 'patch'; // Default increment type
     console.log('Env Vars', githubEventName, githubEventPath);
-    if (githubEventName === 'pull_request' && githubEventPath) {
+    if (githubEventName === 'push' && githubEventPath) {
       const eventData = JSON.parse(fs.readFileSync(githubEventPath, 'utf8'));
       if (eventData.pull_request && eventData.pull_request.labels && eventData.pull_request.labels.length > 0) {
         const labels = eventData.pull_request.labels.map(label => label.name.toLowerCase());
@@ -28,11 +28,8 @@ async function run() {
       } else {
         console.log('No labels found on PR, defaulting to patch increment.');
       }
-    } else if (githubEventName === 'push') {
-      console.log('Direct push to main, defaulting to patch increment.');
-      incrementType = 'patch'; // Explicitly set for push, though already default
     } else {
-      console.log(`Unknown GITHUB_EVENT_NAME: ${githubEventName}, defaulting to patch increment.`);
+      console.log(`Unknown event type - ${githubEventName}, defaulting to patch increment.`);
     }
 
     console.log(`Determined increment type: ${incrementType}`);
