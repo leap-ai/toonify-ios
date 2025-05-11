@@ -6,34 +6,17 @@ const appJsonPath = path.join(__dirname, '..', 'app.json'); // Assumes script is
 
 async function run() {
   try {
-    const githubEventName = process.env.GITHUB_EVENT_NAME;
-    const githubEventPath = process.env.GITHUB_EVENT_PATH;
+    // Read increment type directly from an environment variable set by the workflow
+    let incrementType = process.env.INCREMENT_TYPE ? process.env.INCREMENT_TYPE.toLowerCase() : 'patch';
 
-    let incrementType = 'patch'; // Default increment type
-    console.log('Env Vars', githubEventName, githubEventPath);
-    if (githubEventName === 'push' && githubEventPath) {
-      const eventData = JSON.parse(fs.readFileSync(githubEventPath, 'utf8'));
-      console.log('Event Data', eventData);
-      if (eventData.pull_request && eventData.pull_request.labels && eventData.pull_request.labels.length > 0) {
-        const labels = eventData.pull_request.labels.map(label => label.name.toLowerCase());
-        console.log('PR Labels:', labels);
-
-        if (labels.includes('major')) {
-          incrementType = 'major';
-        } else if (labels.includes('minor')) {
-          incrementType = 'minor';
-        } else if (labels.includes('patch')) {
-          incrementType = 'patch';
-        }
-        // If none of these specific labels are found, it defaults to 'patch' as initialized.
-      } else {
-        console.log('No labels found on PR, defaulting to patch increment.');
-      }
-    } else {
-      console.log(`Unknown event type - ${githubEventName}, defaulting to patch increment.`);
+    // Validate incrementType to be one of the allowed values
+    const validIncrementTypes = ['major', 'minor', 'patch'];
+    if (!validIncrementTypes.includes(incrementType)) {
+      console.warn(`Invalid INCREMENT_TYPE: "${process.env.INCREMENT_TYPE}". Defaulting to 'patch'.`);
+      incrementType = 'patch';
     }
 
-    console.log(`Determined increment type: ${incrementType}`);
+    console.log(`Using increment type: ${incrementType}`);
 
     const appConfigStr = fs.readFileSync(appJsonPath, 'utf8');
     const appConfig = JSON.parse(appConfigStr);
@@ -55,7 +38,8 @@ async function run() {
     fs.writeFileSync(appJsonPath, JSON.stringify(appConfig, null, 2) + '\n');
     console.log(`Successfully bumped version in ${appJsonPath} to ${newVersion}`);
 
-    // Output for GitHub Actions
+    // Output for GitHub Actions (if needed by subsequent steps in the same job)
+    // Note: The primary way to pass data between jobs or for the build name is through the commit.
     console.log(`::set-output name=NEW_VERSION::${newVersion}`);
 
   } catch (error) {
