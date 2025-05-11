@@ -1,13 +1,13 @@
 import React from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import RevenueCatUI from 'react-native-purchases-ui';
+import { PurchasesPackage, CustomerInfo as RNPurchasesCustomerInfo, PurchasesStoreTransaction } from 'react-native-purchases';
 import { useCredits } from '@/hooks/useCredits';
 import { useAppTheme } from '@/context/ThemeProvider';
 
 const Paywall = () => {
   const { 
     isLoading,
-    handlePurchaseStarted,
     handlePurchaseCompleted,
     handlePurchaseCancelled,
     handlePurchaseError,
@@ -16,8 +16,22 @@ const Paywall = () => {
   const { getCurrentTheme } = useAppTheme();
   const theme = getCurrentTheme();
 
+  const onPurchaseStartedUILog = ({ packageBeingPurchased }: { packageBeingPurchased?: PurchasesPackage }) => {
+    console.log('RevenueCatUI.Paywall purchase started for package:', packageBeingPurchased?.product?.identifier);
+  };
+
+  const onPurchaseCompletedWrapper = ({ customerInfo, storeTransaction }: { customerInfo: RNPurchasesCustomerInfo; storeTransaction: PurchasesStoreTransaction }) => {
+    const productIdentifier = storeTransaction.productIdentifier;
+    if (productIdentifier) {
+      handlePurchaseCompleted({
+        customerInfo,
+        productIdentifier: productIdentifier
+      });
+    }
+  };
+
   return (
-    <View style={{ flex: 1, backgroundColor: theme.background }}>
+    <View style={{ flex: 2, backgroundColor: theme.background }}>
       {isLoading && (
         <View style={{ 
           position: 'absolute', 
@@ -37,8 +51,8 @@ const Paywall = () => {
         style={{
           flex: 1,
         }}
-        onPurchaseStarted={handlePurchaseStarted}
-        onPurchaseCompleted={handlePurchaseCompleted}
+        onPurchaseStarted={onPurchaseStartedUILog}
+        onPurchaseCompleted={onPurchaseCompletedWrapper}
         onPurchaseCancelled={handlePurchaseCancelled}
         onPurchaseError={handlePurchaseError}
         onDismiss={handleDismiss}

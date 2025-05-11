@@ -1,31 +1,66 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, Image, ScrollView, Alert, Animated } from 'react-native';
-import { YStack, Button, H1, Text } from 'tamagui';
+import { View, StyleSheet, Image, ScrollView, Alert, Animated, Platform } from 'react-native';
 import { useAppTheme } from '@/context/ThemeProvider';
+import { useSubscriptionStore } from '@/stores/subscription';
 import { useGenerationStore } from '@/stores/generation';
 import CreateCard from '@/components/CreateCard';
 import * as ImagePicker from 'expo-image-picker';
-import { useRouter } from 'expo-router';
-import { useLogoSpinAnimation } from '@/hooks/useLogoSpin';
+import { useRouter, useFocusEffect } from 'expo-router';
+import { 
+  registerForPushNotificationsAsync, 
+  schedulePushNotification 
+} from '@/utils/notifications';
+import { useCredits } from '@/hooks/useCredits';
+
+// Define frontend variant type and options
+export type ImageVariantFrontend = 'pixar' | 'ghiblix' | 'sticker' | 'plushy';
+
+export const VARIANT_OPTIONS: { 
+  label: string; 
+  value: ImageVariantFrontend; 
+  image: any; 
+  isPro: boolean;
+}[] = [
+  { label: 'Ghibli', value: 'ghiblix', image: require('@/assets/images/ghiblix.png'), isPro: false },
+  { label: 'Sticker', value: 'sticker', image: require('@/assets/images/sticker.png'), isPro: true },
+  { label: 'Pixar', value: 'pixar', image: require('@/assets/images/pixar.png'), isPro: true },
+  { label: 'Plushy', value: 'plushy', image: require('@/assets/images/plushy.png'), isPro: true },
+];
 
 export default function GenerateScreen() {
   const router = useRouter();
   const { getCurrentTheme } = useAppTheme();
   const theme = getCurrentTheme();
-  const { generateImage, isLoading } = useGenerationStore();
+  const {
+    generateImage,
+    isGeneratingInBackground,
+    error,
+    clearError,
+  } = useGenerationStore();
+  const { isActiveProMember } = useSubscriptionStore();
+  const { isLoading: isCreditsLoading } = useCredits();
+
   const [localError, setLocalError] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  
-  // Initialize the logo spin animation with autoStart=false
-  const logoAnimation = useLogoSpinAnimation(2000, false);
+  const [selectedVariant, setSelectedVariant] = useState<ImageVariantFrontend>(VARIANT_OPTIONS[0].value);
   
   useEffect(() => {
-    if (!isLoading) {
-      // Stop the animation when loading is complete
-      logoAnimation.stop();
+    registerForPushNotificationsAsync();
+  }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (error) {
+        schedulePushNotification('Generation Failed', error);
+        clearError(); 
+      }
+    }, [error, clearError])
+  );
+
+  const handleDismissImage = () => {
       setSelectedImage(null);
-    }
-  }, [isLoading]);
+    setLocalError(null); 
+  };
 
   const pickImage = async () => {
     try {
@@ -56,50 +91,41 @@ export default function GenerateScreen() {
       return;
     }
 
+    schedulePushNotification('Generation Started', `Your ${selectedVariant} is being created.`);
+
     try {
-      // Start the logo spin animation
-      logoAnimation.start();
-      
-      await generateImage(selectedImage);
+      await generateImage(selectedImage, selectedVariant);
+      const genError = useGenerationStore.getState().error;
+      if (!genError) {
       router.push('/(tabs)/history');
+        schedulePushNotification('Toonified Picture Ready!', `Open app to see your new ${selectedVariant} image.`);
+        setSelectedImage(null);
+        setLocalError(null);
+      } 
     } catch (err) {
-      // Stop the animation if there's an error
-      logoAnimation.stop();
-      
-      console.error('Error generating image:', err);
-      const errorMessage = 'Failed to generate cartoon. Please try again.';
+      console.error('Error during generateImage call in component:', err);
+      if (!useGenerationStore.getState().error) {
+        const errorMessage = 'Failed to generate image. Please try again.';
       setLocalError(errorMessage);
       Alert.alert('Error', errorMessage);
     }
+    }
   };
-  
-  // Create a Y-axis (3D flip) interpolation
-  const flipY = logoAnimation.spinValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg']
-  });
   
   return (
     <View style={[styles.container, { backgroundColor: theme.screenBackground }]}>
       <ScrollView contentContainerStyle={{ flexGrow: 1, alignItems: 'center' }}>
-        <Animated.Image 
-          source={require('@/assets/images/logo.png')} 
-          style={[
-            styles.logo,
-            { 
-              transform: [
-                { perspective: 1000 }, // Add perspective for 3D effect
-                { rotateY: flipY }     // Rotate around Y-axis for flipping effect
-              ] 
-            }
-          ]} 
-        />
         <CreateCard 
           error={localError}
           selectedImage={selectedImage}
-          isLoading={isLoading}
+          isLoading={isGeneratingInBackground || isCreditsLoading}
           onPickImage={pickImage}
           onGenerate={handleGenerate}
+          variants={VARIANT_OPTIONS}
+          selectedVariant={selectedVariant}
+          onVariantChange={setSelectedVariant}
+          onDismissImage={handleDismissImage}
+          isActiveProMember={isActiveProMember}
         />
       </ScrollView>
     </View>
@@ -112,8 +138,8 @@ const styles = StyleSheet.create({
     paddingTop: 50
   },
   logo: {
-    marginBottom: 20,
-    width: 48,
-    height: 48,
+    marginBottom: 10,
+    width: 24,
+    height: 24,
   }
 });

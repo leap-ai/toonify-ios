@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
 import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Home, History, CreditCard, User } from 'lucide-react-native';
+import { Home, History, CreditCard, User, GalleryHorizontal, GalleryThumbnails, Plus, DollarSign } from 'lucide-react-native';
 import { useAppTheme } from '@/context/ThemeProvider';
 
 // Define a more comprehensive theme system that will be used across all tab screens
@@ -70,20 +70,20 @@ export default function TabLayout() {
           name="index"
           options={{
             title: 'Create',
-            tabBarIcon: ({ color, size }) => <Home size={22} color={color} />,
+            tabBarIcon: ({ color, size }) => <Plus size={22} color={color} />,
           }}
         />
         <Tabs.Screen
           name="history"
           options={{
-            title: 'History',
-            tabBarIcon: ({ color, size }) => <History size={22} color={color} />,
+            title: 'Gallery',
+            tabBarIcon: ({ color, size }) => <GalleryThumbnails size={22} color={color} />,
           }}
         />
         <Tabs.Screen
           name="credits"
           options={{
-            title: 'Credits',
+            title: 'Subscriptions',
             tabBarIcon: ({ color, size }) => <CreditCard size={22} color={color} />,
           }}
         />
