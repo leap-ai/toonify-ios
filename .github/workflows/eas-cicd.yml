@@ -76,6 +76,7 @@ jobs:
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
+          packager: bun
           # Optionally, configure Apple credentials here if needed for CI, using GitHub secrets:
           # apple-api-key-path: ${{ secrets.EXPO_ASC_API_KEY_PATH }}
           # apple-api-key-id: ${{ secrets.EXPO_ASC_KEY_ID }}
