@@ -44,8 +44,18 @@ jobs:
         id: eas_dev_build
         run: |
           output=$(eas build -p ios --profile development --non-interactive --no-wait)
+          echo "--- Full EAS Build output ---"
           echo "$output"
-          build_url=$(echo "$output" | grep -o 'https://expo.dev/accounts/[^/]+/projects/[^/]+/builds/[^ ]*' | tail -n 1)
+          echo "--- End of Full EAS Build output ---"
+          
+          # Previous method:
+          # build_url=$(echo "$output" | grep -o 'https://expo.dev/accounts/[^/]+/projects/[^/]+/builds/[^ ]*' | tail -n 1)
+          
+          # New method: Grep for the line and use sed to extract the URL
+          build_url=$(echo "$output" | grep 'Build details: https://expo.dev' | sed 's/.*Build details: //')
+
+          echo "Attempted extracted URL: [$build_url]"
+
           if [ -n "$build_url" ]; then
             echo "Captured build URL: $build_url"
             echo "build_url=$build_url" >> $GITHUB_OUTPUT
