@@ -35,100 +35,23 @@ jobs:
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
+          package-manager: bun
           packager: bun
 
       - name: Install dependencies
         run: bun install --frozen-lockfile # Use --frozen-lockfile for reproducible builds
 
-      - name: Install jq
-        run: sudo apt-get update && sudo apt-get install -y jq
-
-      - name: Start EAS Build (no wait) and Get Build ID
-        id: start_build
-        run: |
-          # Ensure eas-cli is logged in (expo/expo-github-action should handle this)
-          # The output of 'eas build --json' when starting a new build is an array with one build object.
-          BUILD_INFO_JSON=$(eas build -p ios --profile development --non-interactive --json --no-wait)
-          echo "Raw EAS Build Start JSON: $BUILD_INFO_JSON"
-          # Try to determine if it's an array or object for .id extraction
-          if echo "$BUILD_INFO_JSON" | jq -e 'if type=="array" then .[0].id else .id end' > /dev/null; then
-            BUILD_ID=$(echo "$BUILD_INFO_JSON" | jq -r 'if type=="array" then .[0].id else .id end')
-          else
-            echo "::error::Could not parse BUILD_ID from EAS build submission. JSON structure might be unexpected."
-            exit 1
-          fi
-
-          if [ -z "$BUILD_ID" ] || [ "$BUILD_ID" == "null" ]; then
-            echo "::error::Could not retrieve BUILD_ID from EAS build submission."
-            exit 1
-          fi
-          echo "BUILD_ID=$BUILD_ID" >> $GITHUB_OUTPUT
-          echo "Started EAS Build ID: $BUILD_ID"
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-
-      - name: Install qrcode-terminal
-        run: bun install -g qrcode-terminal
-
-      - name: Poll Build Status
-        id: poll_build
-        run: |
-          STATUS=""
-          BUILD_ID="${{ steps.start_build.outputs.BUILD_ID }}"
-          echo "Polling for EAS Build ID: $BUILD_ID"
-          until [[ "$STATUS" == "finished" || "$STATUS" == "errored" || "$STATUS" == "canceled" ]]; do # Added canceled
-            echo "⏳ Waiting for build $BUILD_ID to finish... (current status: $STATUS)"
-            sleep 30
-            # Attempt to capture output even if the command fails
-            BUILD_INSPECT_OUTPUT=$(eas build:inspect $BUILD_ID --json --debug 2>&1) || true 
-            echo "Raw Build Inspect Output (eas build:inspect): $BUILD_INSPECT_OUTPUT"
-            # Check if the output is valid JSON before trying to parse status
-            if echo "$BUILD_INSPECT_OUTPUT" | jq -e '.status' > /dev/null; then
-              STATUS=$(echo "$BUILD_INSPECT_OUTPUT" | jq -r '.status')
-            else 
-              echo "::warning::Build inspect output was not valid JSON or did not contain .status. Output: $BUILD_INSPECT_OUTPUT"
-              # If inspect fails consistently, this loop might run indefinitely or until timeout.
-              # Consider adding a max attempts counter here if this becomes a persistent issue.
-              STATUS="unknown_error" # Set a status to break or handle appropriately
-            fi
-
-            if [ -z "$STATUS" ] || [ "$STATUS" == "null" ]; then
-              echo "::warning::Could not determine build status. Retrying..."
-              STATUS="pending" # Assume pending to retry
-            fi
-          done
-          echo "✅ Build $BUILD_ID status: $STATUS"
-          if [[ "$STATUS" == "errored" || "$STATUS" == "canceled" ]]; then
-            echo "::error::Build $BUILD_ID failed or was canceled. Status: $STATUS"
-            exit 1
-          fi
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-      
-      - name: Get iOS Dev Build Install URL
-        id: get_install_url
-        run: |
-          BUILD_ID="${{ steps.start_build.outputs.BUILD_ID }}"
-          echo "Fetching install URL for completed build ID: $BUILD_ID"
-          # build:inspect gives a single build object
-          INSTALL_URL_JSON=$(eas build:inspect $BUILD_ID --json)
-          echo "Install URL JSON: $INSTALL_URL_JSON"
-          INSTALL_URL=$(echo "$INSTALL_URL_JSON" | jq -r '.artifacts.buildUrl')
-          
-          if [ -z "$INSTALL_URL" ] || [ "$INSTALL_URL" == "null" ]; then
-            echo "::error::Could not retrieve a valid install URL for build $BUILD_ID."
-            exit 1
-          fi
-          echo "Install URL: $INSTALL_URL"
-          echo "build_url=$INSTALL_URL" >> $GITHUB_OUTPUT
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-
-      - name: Show Install QR Code in Log
-        if: steps.get_install_url.outputs.build_url
-        run: |
-          echo "📱 Scan this QR code with your provisioned iPhone to install the iOS development build:"
-          qrcode-terminal --small "${{ steps.get_install_url.outputs.build_url }}"
+      - name: Create iOS Development Build
+        run: eas build -p ios --profile development --non-interactive --no-wait
+        # Ensure you have a 'development' profile in eas.json configured for iOS development builds.
+        # Example eas.json development profile for iOS:
+        # "development": {
+        #   "developmentClient": true,
+        #   "distribution": "internal",
+        #   "ios": {
+        #     "simulator": false 
+        #   }
+        # }
 
   production_build_and_submit:
     name: Create Production Build and Submit to TestFlight (iOS)
