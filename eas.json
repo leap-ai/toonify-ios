@@ -29,7 +29,9 @@
   "submit": {
     "production": {
       "ios": {
-         "appleId": "yash@tryleap.ai"
+         "appleId": "yash@tryleap.ai",
+         "ascAppId": "6744882427",
+         "appleTeamId": "SBDQQVGXVD"
        }
     }
   }
