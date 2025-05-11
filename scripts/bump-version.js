@@ -10,7 +10,7 @@ async function run() {
     const githubEventPath = process.env.GITHUB_EVENT_PATH;
 
     let incrementType = 'patch'; // Default increment type
-
+    console.log('Env Vars', githubEventName, githubEventPath);
     if (githubEventName === 'pull_request' && githubEventPath) {
       const eventData = JSON.parse(fs.readFileSync(githubEventPath, 'utf8'));
       if (eventData.pull_request && eventData.pull_request.labels && eventData.pull_request.labels.length > 0) {
