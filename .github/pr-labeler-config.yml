@@ -1,0 +1,4 @@
+version: v1
+labels:
+  - label: 'patch'
+    default: true # This makes 'patch' the default label for all new PRs 
