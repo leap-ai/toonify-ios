@@ -35,14 +35,31 @@ jobs:
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
-          package-manager: bun
           packager: bun
 
       - name: Install dependencies
         run: bun install --frozen-lockfile # Use --frozen-lockfile for reproducible builds
 
-      - name: Create iOS Development Build
-        run: eas build -p ios --profile development --non-interactive --no-wait
+      - name: Create iOS Development Build and Capture URL
+        id: eas_dev_build
+        run: |
+          output=$(eas build -p ios --profile development --non-interactive --no-wait)
+          echo "$output"
+          build_url=$(echo "$output" | grep -o 'https://expo.dev/accounts/[^/]+/projects/[^/]+/builds/[^ ]*' | tail -n 1)
+          if [ -n "$build_url" ]; then
+            echo "Captured build URL: $build_url"
+            echo "build_url=$build_url" >> $GITHUB_OUTPUT
+          else
+            echo "Could not capture build URL."
+            exit 1
+          fi
+
+      - name: Install qrcode-terminal
+        run: bun install -g qrcode-terminal
+
+      - name: Generate QR Code for Build Details Page
+        if: steps.eas_dev_build.outputs.build_url
+        run: qrcode-terminal "${{ steps.eas_dev_build.outputs.build_url }}"
         # Ensure you have a 'development' profile in eas.json configured for iOS development builds.
         # Example eas.json development profile for iOS:
         # "development": {
