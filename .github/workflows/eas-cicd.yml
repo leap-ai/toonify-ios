@@ -69,7 +69,7 @@ jobs:
 
       - name: Generate QR Code for Build Details Page
         if: steps.eas_dev_build.outputs.build_url
-        run: qrcode-terminal "${{ steps.eas_dev_build.outputs.build_url }}"
+        run: qrcode-terminal --small "${{ steps.eas_dev_build.outputs.build_url }}"
         # Ensure you have a 'development' profile in eas.json configured for iOS development builds.
         # Example eas.json development profile for iOS:
         # "development": {
