@@ -12,7 +12,7 @@ on:
 jobs:
   development_build:
     name: Development Build
-    if: github.event_name == 'pull_request' # Only run this job for pull request events
+    if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize') # Only run this job for pull request events
     runs-on: ubuntu-latest
     permissions:
       contents: read # Needed for checkout
@@ -55,7 +55,7 @@ jobs:
 
   production_build_and_submit:
     name: Create Production Build and Submit to TestFlight (iOS)
-    if: (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true)
+    if: github.event_name == 'pull_request' && (github.event.action == 'closed' && github.event.pull_request.merged == true)
     runs-on: ubuntu-latest
     permissions:
       contents: write      # To commit version bump
