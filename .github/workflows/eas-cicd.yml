@@ -97,18 +97,18 @@ jobs:
             }
             core.setOutput('increment_type', incrementType);
       - name: Bump version
-        run: node frontend-mobile/scripts/bump-version.js
+        run: node scripts/bump-version.js
         env:
           INCREMENT_TYPE: ${{ steps.find_pr.outputs.increment_type }}
       - name: Commit and push version bump
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add frontend-mobile/app.json
+          git add app.json
           if git diff --staged --quiet; then
             echo "No version change detected."
           else
-            NEW_VERSION=$(jq -r .expo.version frontend-mobile/app.json)
+            NEW_VERSION=$(jq -r .expo.version /app.json)
             git commit -m "chore: bump version to $NEW_VERSION [skip ci]"
             git push
           fi
