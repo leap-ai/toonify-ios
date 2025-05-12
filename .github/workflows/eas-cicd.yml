@@ -127,10 +127,12 @@ jobs:
       contents: write      # To commit version bump
       pull-requests: read  # To read PR labels
     steps:
-      - name: Check out repository
+      # Explicitly checkout the latest commit on main branch AFTER the bump job pushed.
+      - name: Check out latest main branch
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 
+          ref: 'main' # Explicitly checkout the head of main
+          fetch-depth: 0 # Keep fetch-depth if needed for history elsewhere
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
