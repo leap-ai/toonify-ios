@@ -27,7 +27,8 @@
             ]
           }
         ],
-        "NSPhotoLibraryUsageDescription": "Toonify needs access to your photo library to upload images for cartoon generation and to let you update your profile picture."
+        "NSPhotoLibraryUsageDescription": "Toonify needs access to your photo library to upload images for cartoon generation and to let you update your profile picture.",
+        "NSUserNotificationUsageDescription": "Toonify would like to send you notifications about starting and completing cartoon generations, new features, and subscription updates."
       }
     },
     "web": {
