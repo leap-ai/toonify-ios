@@ -73,7 +73,6 @@ jobs:
 
       # Install dependencies needed for the bump-version.js script
       - name: Install script dependencies
-        working-directory: ./frontend-mobile
         run: bun install --frozen-lockfile
 
       - name: Find merged PR and determine increment type
@@ -114,7 +113,7 @@ jobs:
           if git diff --staged --quiet; then
             echo "No version change detected."
           else
-            NEW_VERSION=$(jq -r .expo.version /app.json)
+            NEW_VERSION=$(jq -r .expo.version app.json)
             git commit -m "chore: bump version to $NEW_VERSION [skip ci]"
             git push
           fi
@@ -143,8 +142,9 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Install project dependencies (including semver)
-        run: bun install --frozen-lockfile 
+      # This installs dependencies for the main app build
+      - name: Install project dependencies
+        run: bun install --frozen-lockfile # Runs at the root of frontend-mobile
 
       - name: Setup Git User
         run: |
