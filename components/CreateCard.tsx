@@ -2,35 +2,11 @@ import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Image, TouchableOpacity, ImageSourcePropType, ScrollView as RNScrollView, Animated } from 'react-native';
 import { Card, H3, Text, YStack, Button, Spinner, XStack, ToggleGroup, SizableText, ScrollView } from 'tamagui';
 import { useAppTheme } from '@/context/ThemeProvider';
-import { APP_DISCLAIMER } from '@/utils/constants';
+import { APP_DISCLAIMER, BEST_PRACTICES, VARIANT_OPTIONS } from '@/utils/constants';
 import { Zap, X as XIcon, Info, Lock } from '@tamagui/lucide-icons';
-import { ImageVariantFrontend, VARIANT_OPTIONS } from '@/app/(tabs)/index';
+import { ImageVariantFrontend } from '@/utils/types';
 
 const selectedVariantLabel = (selectedVariant: ImageVariantFrontend) => VARIANT_OPTIONS.find(v => v.value === selectedVariant)?.label;
-
-// Define best practices data structure
-const BEST_PRACTICES: Record<ImageVariantFrontend, string[]> = {
-  pixar: [
-    "Clear, well-lit portrait or upper body shots work best.",
-    "Avoid very busy backgrounds for optimal focus on the subject.",
-    "1-2 people maximum for best character detail."
-  ],
-  ghiblix: [
-    "Scenic shots or expressive character faces are great.",
-    "Softer lighting enhances the Ghibli feel.",
-    "Ensure good contrast in the image."
-  ],
-  sticker: [
-    "Clear subject, preferably a face or a distinct object.",
-    "Simpler backgrounds help the sticker 'pop'.",
-    "Good for solo subjects."
-  ],
-  plushy: [
-    "Works well with animals, characters, or even people.",
-    "Good lighting helps define the 'plush' texture.",
-    "Avoid overly complex details that might get lost."
-  ],
-};
 
 export interface CreateCardProps {
   error: string | null;

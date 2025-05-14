@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSegments } from 'expo-router';
-import { authClient } from '@/stores/auth';
+import { usePostHog } from 'posthog-react-native';
 import Purchases from 'react-native-purchases';
+import { authClient } from '@/stores/auth';
 import { useSubscriptionStore } from '@/stores/subscription';
 
 // Function to handle RevenueCat login 
@@ -25,6 +26,7 @@ const handleRevenueCatLogin = async (userId: string) => {
 };
 
 const AuthHandler = () => {
+    const posthog = usePostHog();
     const { data: session, isPending: isAuthLoading } = authClient.useSession();
     const segments = useSegments();
     const router = useRouter();
@@ -41,40 +43,61 @@ const AuthHandler = () => {
     }, [router, segments]);
 
     useEffect(() => {
-        if (!isNavigationReady || isAuthLoading) return;
+        const handleAuthFlow = async () => {
+            if (!isNavigationReady || isAuthLoading) return;
 
-        const inAuthGroup = segments[0] === '(auth)';
-        const currentUserId = session?.user?.id;
+            const inAuthGroup = segments[0] === '(auth)';
+            const currentUserId = session?.user?.id;
 
-        if (currentUserId) {
-            // --- Run Setup only once per user ID --- 
-            if (setupDoneForUser !== currentUserId) {
-                console.log(`AuthHandler: Running setup for user ${currentUserId}`);
-                handleRevenueCatLogin(currentUserId);
-                fetchProStatus(); // Fetch pro status from backend
-                setSetupDoneForUser(currentUserId); // Mark setup as done for this user
-            }
-            // --- End Setup Logic ---
+            if (currentUserId) {
+                // --- Run Setup only once per user ID --- 
+                if (setupDoneForUser !== currentUserId) {
+                    console.log(`AuthHandler: Running setup for user ${currentUserId}`);
+                    handleRevenueCatLogin(currentUserId);
+
+                    await fetchProStatus(); // Fetch pro status from backend
+                    const { isActiveProMember } = useSubscriptionStore.getState(); // Get updated state
+                    
+                    // Identify user with PostHog
+                    if (posthog) {
+                        posthog.identify(
+                            currentUserId, 
+                            { 
+                                email: session?.user?.email,
+                                name: session?.user?.name,
+                                is_pro_user: isActiveProMember,
+                            }
+                        );
+                    }
+                    setSetupDoneForUser(currentUserId); // Mark setup as done for this user
+                }
+                // --- End Setup Logic ---
+                
+                // Navigation logic
+                if (inAuthGroup) {
+                    router.replace('/(tabs)');
+                }
+            } else {
+                // User is logged out
+                if (setupDoneForUser !== null) {
+                    console.log("AuthHandler: Clearing setup state on logout.");
+                    if (posthog) {
+                        posthog.reset(); // Reset PostHog session on logout
+                    }
+                    setSetupDoneForUser(null); // Reset setup state on logout
+                }
             
-            // Navigation logic (runs based on segments potentially)
-            if (inAuthGroup) {
-                router.replace('/(tabs)');
+                // Optionally clear subscription state on logout if needed
+                // useSubscriptionStore.getState().reset(); 
+                if (!inAuthGroup && segments[0] !== 'legal') {
+                    router.replace('/(auth)');
+                }
             }
-        } else {
-            // User is logged out
-            if (setupDoneForUser !== null) {
-                 console.log("AuthHandler: Clearing setup state on logout.");
-                 setSetupDoneForUser(null); // Reset setup state on logout
-            }
-           
-            // Optionally clear subscription state on logout if needed
-            // useSubscriptionStore.getState().reset(); // Example: Add a reset action if desired
-            if (!inAuthGroup && segments[0] !== 'legal') {
-                router.replace('/(auth)');
-            }
-        }
+        };
+
+        handleAuthFlow();
         // Dependency array includes everything needed for the logic inside
-    }, [session, isAuthLoading, segments, router, isNavigationReady, fetchProStatus, setupDoneForUser]);
+    }, [session, posthog, isAuthLoading, segments, router, isNavigationReady, fetchProStatus, setupDoneForUser]);
 
     // This component does not render anything
     return null;

@@ -59,4 +59,15 @@ export type ProductMetadata = {
     createdAt: string;
     status?: string;
     currency?: string;
-  } 
+  }
+
+
+export interface Generation {
+  id: number;
+  originalImageUrl: string;
+  cartoonImageUrl: string;
+  createdAt: string;
+}
+
+// Define frontend variant type and options
+export type ImageVariantFrontend = 'pixar' | 'ghiblix' | 'sticker' | 'plushy';

@@ -11,12 +11,16 @@ import Purchases, {
   MakePurchaseResult,
   CustomerInfo
 } from 'react-native-purchases';
+import { usePostHog } from 'posthog-react-native';
+import { ANALYTICS_EVENTS } from '@/utils/constants';
 
 // Define PurchaseCompletedEvent and PurchaseErrorEvent locally to avoid import conflicts
 // and ensure they match the SDK's usage.
 export interface PurchaseCompletedEvent {
   productIdentifier: string;
   customerInfo: CustomerInfo; // Use Purchases.CustomerInfo directly if needed
+  priceString?: string;
+  currencyCode?: string;
 }
 
 export interface PurchaseErrorEvent {
@@ -24,6 +28,7 @@ export interface PurchaseErrorEvent {
 }
 
 export function useCredits() {
+  const posthog = usePostHog();
   const router = useRouter();
   // Use the renamed store
   const store = useSubscriptionStore();
@@ -63,12 +68,14 @@ export function useCredits() {
       return;
     }
     try {
-      console.log(`Attempting purchase for: ${product.identifier}`);
+      console.log(`Attempting purchase for: ${product.identifier}`, product);
       const purchaseResult: MakePurchaseResult = await Purchases.purchaseStoreProduct(product);
       console.log('Purchase successful from SDK', purchaseResult.customerInfo, purchaseResult.productIdentifier);
       handlePurchaseCompleted({
         customerInfo: purchaseResult.customerInfo,
-        productIdentifier: purchaseResult.productIdentifier
+        productIdentifier: purchaseResult.productIdentifier,
+        priceString: product.priceString,
+        currencyCode: product.currencyCode
       });
     } catch (e) {
       const error = e as PurchasesError;
@@ -93,7 +100,9 @@ export function useCredits() {
       console.log('Package purchase successful from SDK', purchaseResult.customerInfo, purchaseResult.productIdentifier);
       handlePurchaseCompleted({
         customerInfo: purchaseResult.customerInfo,
-        productIdentifier: purchaseResult.productIdentifier
+        productIdentifier: purchaseResult.productIdentifier,
+        priceString: pkg.product.priceString,
+        currencyCode: pkg.product.currencyCode
       });
     } catch (e) {
       const error = e as PurchasesError;
@@ -110,12 +119,24 @@ export function useCredits() {
   const handlePurchaseCompleted = useCallback(async (event: PurchaseCompletedEvent) => {
     console.log('✅ Purchase completed, processing...', event);
     const productId = event.productIdentifier;
-    const productName = metadataMap[productId]?.name || productId || 'Selected Plan';
+    const productDetails = metadataMap[productId];
+    const productName = productDetails?.name || productId || 'Selected Plan';
 
       Alert.alert(
       'Purchase Successful', 
       `Your subscription to ${productName} is now active! Credits will be updated shortly if applicable.`
       );
+
+      if (posthog) {
+        posthog.capture(ANALYTICS_EVENTS.SUBSCRIPTION_PURCHASED, {
+          subscription_plan_id: productId,
+          subscription_plan_name: productName,
+          subscription_price: metadataMap[productId]?.priceString,
+        });
+        posthog.capture('$set', { 
+          $set: { is_pro_user: true },
+        });
+      }
 
     // Refresh backend pro status and credits data
       try {
@@ -124,11 +145,11 @@ export function useCredits() {
           fetchBalance(),
           fetchPaymentsHistory()
         ]);
-      console.log('Backend subscription status and credit data refresh triggered after purchase.');
+        console.log('Backend subscription status and credit data refresh triggered after purchase.');
       } catch (refreshError) {
         console.error('Error refreshing data after purchase:', refreshError);
       }
-  }, [fetchProStatus, fetchBalance, fetchPaymentsHistory, metadataMap, router]);
+  }, [fetchProStatus, fetchBalance, fetchPaymentsHistory, metadataMap, router, posthog]);
 
   const handlePurchaseCancelled = () => {
     console.log('🚫 Purchase cancelled by user');

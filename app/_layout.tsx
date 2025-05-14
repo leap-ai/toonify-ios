@@ -1,6 +1,5 @@
-import { DarkTheme, DefaultTheme } from '@react-navigation/native';
+import { PostHogProvider } from 'posthog-react-native'
 import { TamaguiProvider } from 'tamagui';
-import tamaguiConfig from '@/tamagui.config';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -10,10 +9,12 @@ import 'react-native-reanimated';
 
 import { Platform, useColorScheme } from 'react-native';
 import Purchases, { LOG_LEVEL } from 'react-native-purchases';
-import { REVENUE_CAT_APPLE_API_KEY } from '@/utils/config';
+import tamaguiConfig from '@/tamagui.config';
+import { POSTHOG_KEY, REVENUE_CAT_APPLE_API_KEY, POSTHOG_HOST } from '@/utils/config';
 import { ProductMetadataProvider } from '@/context/ProductMetadataProvider';
 import { ThemeProvider } from '@/context/ThemeProvider';
 import AuthHandler from '@/components/AuthHandler';
+import { POSTHOG_SESSION_REPLAY_CONFIG } from '@/utils/constants';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -47,26 +48,33 @@ export default function RootLayout() {
   }
 
   return (
-    <TamaguiProvider config={tamaguiConfig} defaultTheme={colorScheme ?? 'light'}>
-      <ThemeProvider>
-        <ProductMetadataProvider>
-          <AuthHandler />
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="(auth)/index" />
-            <Stack.Screen name="(auth)/login" />
-            <Stack.Screen name="(auth)/signup" />
-            <Stack.Screen 
-              name="legal" 
-              options={{ 
-                headerShown: true,
-              }} 
-            />
-            <Stack.Screen name="+not-found" />
-          </Stack>
-          <StatusBar style="auto" />
-        </ProductMetadataProvider>
-      </ThemeProvider>
-    </TamaguiProvider>
+    <PostHogProvider apiKey={POSTHOG_KEY} options={{
+      host: POSTHOG_HOST,
+      // Enable session recording. Requires enabling in your project settings as well.
+      enableSessionReplay: true,
+      sessionReplayConfig: POSTHOG_SESSION_REPLAY_CONFIG,
+    }}>
+      <TamaguiProvider config={tamaguiConfig} defaultTheme={colorScheme ?? 'light'}>
+        <ThemeProvider>
+          <ProductMetadataProvider>
+            <AuthHandler />
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="(auth)/index" />
+              <Stack.Screen name="(auth)/login" />
+              <Stack.Screen name="(auth)/signup" />
+              <Stack.Screen 
+                name="legal" 
+                options={{ 
+                  headerShown: true,
+                }} 
+              />
+              <Stack.Screen name="+not-found" />
+            </Stack>
+            <StatusBar style="auto" />
+          </ProductMetadataProvider>
+        </ThemeProvider>
+      </TamaguiProvider>
+    </PostHogProvider>
   );
 }
