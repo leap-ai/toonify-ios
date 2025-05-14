@@ -75,13 +75,12 @@ const ANALYTICS_EVENTS = {
   USER_LOGGED_OUT: 'user_logged_out',
   USER_CHANGED_PASSWORD: 'user_changed_password',
   SUBSCRIPTION_PURCHASED: 'subscription_purchased',
-  USER_UPLOADED_IMAGE: 'user_uploaded_image',
   CARTOON_GENERATED: 'cartoon_generated',
-  USER_DOWNLOADED_CARTOON: 'user_downloaded_cartoon',
-  USER_SHARED_CARTOON: 'user_shared_cartoon',
-  USER_USED_CREDITS: 'user_used_credits',
-  USER_RESTORED_CREDITS: 'user_restored_credits',
-  USER_USED_PROMO_CODE: 'user_used_promo_code',
+  // USER_DOWNLOADED_CARTOON: 'user_downloaded_cartoon',
+  // USER_SHARED_CARTOON: 'user_shared_cartoon',
+  // USER_USED_CREDITS: 'user_used_credits',
+  // USER_RESTORED_CREDITS: 'user_restored_credits',
+  // USER_USED_PROMO_CODE: 'user_used_promo_code',
   
 }
 
