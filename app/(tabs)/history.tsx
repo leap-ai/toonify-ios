@@ -13,9 +13,9 @@ import {
   H4
 } from 'tamagui';
 import { useAppTheme } from '@/context/ThemeProvider';
-import { Generation } from '@/components/GenerationItem';
 import { GridItem } from '@/components/GridItem';
 import { ImageDetailsModal } from '@/components/ImageDetailsModal';
+import { Generation } from '@/utils/types';
 
 // Grid layout configuration
 const { width } = Dimensions.get('window');

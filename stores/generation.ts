@@ -2,13 +2,7 @@ import { create } from 'zustand';
 import axios from 'axios';
 import { API_URL } from '@/utils/config';
 import { getAuthHeaders } from '@/stores/auth';
-
-export interface Generation {
-  id: number;
-  originalImageUrl: string;
-  cartoonImageUrl: string;
-  createdAt: string;
-}
+import { Generation } from '@/utils/types';
 
 interface GenerationState {
   generations: Generation[];

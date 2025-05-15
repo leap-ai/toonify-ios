@@ -15,8 +15,11 @@ import {
   H4,
 } from 'tamagui';
 import { useAppTheme } from '@/context/ThemeProvider';
+import { usePostHog } from 'posthog-react-native';
+import { ANALYTICS_EVENTS } from '@/utils/constants';
 
 export default function ChangePasswordScreen() {
+  const posthog = usePostHog();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
@@ -43,6 +46,11 @@ export default function ChangePasswordScreen() {
         newPassword,
         revokeOtherSessions: true,
       });
+      if (posthog) {
+        posthog.capture(ANALYTICS_EVENTS.USER_CHANGED_PASSWORD, {
+          revoke_sessions: true, 
+        });
+      }
       Alert.alert('Success', 'Password changed successfully.');
       router.back(); // Go back to profile on success
     } catch (error: any) {

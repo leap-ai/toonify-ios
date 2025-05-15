@@ -20,11 +20,14 @@ import { useAppTheme } from '@/context/ThemeProvider';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import { GOOGLE_IOS_CLIENT_ID, GOOGLE_WEB_CLIENT_ID } from '@/utils/config';
+import { usePostHog } from 'posthog-react-native';
+import { ANALYTICS_EVENTS } from '@/utils/constants';
 
 // Initialize WebBrowser
 WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
+  const posthog = usePostHog();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -59,8 +62,15 @@ export default function LoginScreen() {
           },
           onSuccess: (ctx) => {
              const userId = ctx?.data?.user?.id;
+             const email = ctx?.data?.user?.email;
              if (userId) {
                handleRevenueCatLogin(userId);
+             }
+             if (posthog) {
+               posthog.capture(ANALYTICS_EVENTS.USER_LOGGED_IN, {
+                 method: 'google',
+                 email,
+               });
              }
             setIsLoading(false);
           }
@@ -118,10 +128,16 @@ export default function LoginScreen() {
       onSuccess: async (ctx) => {
         try {
           const userId = ctx?.data?.user?.id;
+          const name = ctx?.data?.user?.name;
+          const email = ctx?.data?.user?.email;
           if (userId) {
             await handleRevenueCatLogin(userId);
-          } else {
-            console.warn("Could not extract user ID after successful email login");
+          }
+          if (posthog) {
+            posthog.capture(ANALYTICS_EVENTS.USER_LOGGED_IN, {
+              method: 'email',
+              email: email,
+            });
           }
         } catch (error) {
           console.error("Error during post-login processing:", error);
@@ -155,8 +171,15 @@ export default function LoginScreen() {
           },
           onSuccess: (ctx) => {
              const userId = ctx?.data?.user?.id;
+             const email = ctx?.data?.user?.email;
              if (userId) {
                handleRevenueCatLogin(userId);
+             }
+             if (posthog) {
+               posthog.capture(ANALYTICS_EVENTS.USER_LOGGED_IN, {
+                 method: 'apple',
+                 email,
+               });
              }
             setIsLoading(false);
           }

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Alert, Modal, Image, Pressable, Platform } from 'react-native';
 import { LogOut, Palette, X, User, Edit3, Trash2 } from 'lucide-react-native';
 import { authClient, uploadProfilePicture } from "@/stores/auth";
-import { useCredits } from '@/hooks/useCredits';
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import Constants from 'expo-constants';
@@ -22,10 +21,12 @@ import { useAppTheme } from '@/context/ThemeProvider';
 import ThemeSelector from '@/components/ThemeSelector';
 import InfoItem from '@/components/InfoItem';
 import { API_URL } from '@/utils/config';
+import { usePostHog } from 'posthog-react-native';
+import { ANALYTICS_EVENTS } from '@/utils/constants';
 
 export default function ProfileScreen() {
+  const posthog = usePostHog();
   const { data: session, isPending: isSessionLoading } = authClient.useSession();
-  const { history: creditHistory } = useCredits();
   const { getCurrentTheme, activeThemeVariant } = useAppTheme();
   const theme = getCurrentTheme();
   const [showThemeModal, setShowThemeModal] = useState(false);
@@ -74,6 +75,9 @@ export default function ProfileScreen() {
   const handleLogout = async () => {
     try {
       await authClient.signOut();
+      if (posthog) {
+        posthog.capture(ANALYTICS_EVENTS.USER_LOGGED_OUT);
+      }
     } catch (error) {
       console.error('Logout failed:', error);
       Alert.alert('Error', 'Failed to log out. Please try again.');

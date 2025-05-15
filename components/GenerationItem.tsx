@@ -3,17 +3,11 @@ import { View, StyleSheet, Image, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import { X } from 'lucide-react-native';
 import { Text, Spinner, Stack, Button, Card, XStack } from 'tamagui';
-import { useAppTheme } from '@/context/ThemeProvider';
 import { formatRelativeDate } from '@/utils/date';
 import * as Sharing from 'expo-sharing';
 import { Share2, Trash2, RefreshCw, Zap, Download } from 'lucide-react-native';
-
-export interface Generation {
-  id: number;
-  originalImageUrl: string;
-  cartoonImageUrl: string;
-  createdAt: string;
-}
+import { Generation } from '@/utils/types';
+import { useAppTheme } from '@/context/ThemeProvider';
 
 interface GenerationItemProps {
   item: Generation;

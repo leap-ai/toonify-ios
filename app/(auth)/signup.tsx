@@ -19,8 +19,11 @@ import {
 } from 'tamagui';
 import { useAppTheme } from '@/context/ThemeProvider';
 import { API_URL } from '@/utils/config';
+import { usePostHog } from 'posthog-react-native';
+import { ANALYTICS_EVENTS } from '@/utils/constants';
 
 export default function SignupScreen() {
+  const posthog = usePostHog();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -89,6 +92,9 @@ export default function SignupScreen() {
       },
       onSuccess: () => {
         setIsLoading(false);
+        if (posthog) {
+          posthog.capture(ANALYTICS_EVENTS.USER_SIGNED_UP);
+        }
       }
     })
   };

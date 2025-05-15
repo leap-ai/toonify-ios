@@ -11,23 +11,12 @@ import {
   schedulePushNotification 
 } from '@/utils/notifications';
 import { useCredits } from '@/hooks/useCredits';
-
-// Define frontend variant type and options
-export type ImageVariantFrontend = 'pixar' | 'ghiblix' | 'sticker' | 'plushy';
-
-export const VARIANT_OPTIONS: { 
-  label: string; 
-  value: ImageVariantFrontend; 
-  image: any; 
-  isPro: boolean;
-}[] = [
-  { label: 'Ghibli', value: 'ghiblix', image: require('@/assets/images/ghiblix.png'), isPro: false },
-  { label: 'Sticker', value: 'sticker', image: require('@/assets/images/sticker.png'), isPro: true },
-  { label: 'Pixar', value: 'pixar', image: require('@/assets/images/pixar.png'), isPro: true },
-  { label: 'Plushy', value: 'plushy', image: require('@/assets/images/plushy.png'), isPro: true },
-];
+import { ImageVariantFrontend } from '@/utils/types';
+import { ANALYTICS_EVENTS, VARIANT_OPTIONS } from '@/utils/constants';
+import { usePostHog } from 'posthog-react-native';
 
 export default function GenerateScreen() {
+  const posthog = usePostHog();
   const router = useRouter();
   const { getCurrentTheme } = useAppTheme();
   const theme = getCurrentTheme();
@@ -97,7 +86,12 @@ export default function GenerateScreen() {
       await generateImage(selectedImage, selectedVariant);
       const genError = useGenerationStore.getState().error;
       if (!genError) {
-      router.push('/(tabs)/history');
+        if (posthog) {
+          posthog.capture(ANALYTICS_EVENTS.CARTOON_GENERATED, {
+            cartoon_variant: selectedVariant,
+          });
+        }
+        router.push('/(tabs)/history');
         schedulePushNotification('Toonified Picture Ready!', `Open app to see your new ${selectedVariant} image.`);
         setSelectedImage(null);
         setLocalError(null);

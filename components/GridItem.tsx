@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { View, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { Text, Spinner } from 'tamagui';
-import { Generation } from '@/components/GenerationItem';
 import { formatRelativeDate } from '@/utils/date';
 import { ThemeColors } from '@/context/ThemeProvider';
+import { Generation } from '@/utils/types';
 
 interface GridItemProps {
   item: Generation;
