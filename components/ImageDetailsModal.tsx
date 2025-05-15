@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Image, Modal, Dimensions, TouchableOpacity, Alert, Platform, Share } from 'react-native';
 import { Text, XStack, Button, YStack, Spinner } from 'tamagui';
 import { X, Download, Share2, Trash2 } from 'lucide-react-native';
 import { formatRelativeDate } from '@/utils/date';
 import { useAppTheme } from '@/context/ThemeProvider';
-import { ImageModal } from './ImageModal';
 import * as MediaLibrary from 'expo-media-library';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
@@ -26,7 +25,6 @@ const isDev = Constants.appOwnership === 'expo' || __DEV__;
 export const ImageDetailsModal = ({ isVisible, onClose, item }: ImageDetailsModalProps) => {
   const { getCurrentTheme } = useAppTheme();
   const theme = getCurrentTheme();
-  const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
   const [originalImageLoaded, setOriginalImageLoaded] = useState(false);
   const [cartoonImageLoaded, setCartoonImageLoaded] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -36,7 +34,7 @@ export const ImageDetailsModal = ({ isVisible, onClose, item }: ImageDetailsModa
   // const [status, requestPermission] = MediaLibrary.usePermissions();
 
   // Reset loading states when modal opens with new item
-  React.useEffect(() => {
+  useEffect(() => {
     if (isVisible) {
       setOriginalImageLoaded(false);
       setCartoonImageLoaded(false);
@@ -44,14 +42,6 @@ export const ImageDetailsModal = ({ isVisible, onClose, item }: ImageDetailsModa
   }, [isVisible, item]);
 
   if (!item) return null;
-
-  const handleImagePress = (imageUrl: string) => {
-    setFullScreenImage(imageUrl);
-  };
-
-  const handleFullScreenClose = () => {
-    setFullScreenImage(null);
-  };
 
   const saveToGallery = async (imageUrl: string) => {
     try {
@@ -183,6 +173,7 @@ export const ImageDetailsModal = ({ isVisible, onClose, item }: ImageDetailsModa
   return (
     <>
       <Modal
+        id="image-details"
         visible={isVisible}
         animationType="slide"
         transparent={true}
@@ -216,7 +207,6 @@ export const ImageDetailsModal = ({ isVisible, onClose, item }: ImageDetailsModa
                 <Text color={theme.text.accent} fontSize="$3" fontWeight="500">Original</Text>
                 <TouchableOpacity 
                   style={[styles.imageContainer, { borderColor: theme.cardBorder }]}
-                  onPress={() => handleImagePress(item.originalImageUrl)}
                   activeOpacity={0.8}
                 >
                   {!originalImageLoaded && (
@@ -237,7 +227,6 @@ export const ImageDetailsModal = ({ isVisible, onClose, item }: ImageDetailsModa
                 <Text color={theme.text.accent} fontSize="$3" fontWeight="500">Cartoon</Text>
                 <TouchableOpacity 
                   style={[styles.imageContainer, { borderColor: theme.cardBorder }]}
-                  onPress={() => handleImagePress(item.cartoonImageUrl)}
                   activeOpacity={0.8}
                 >
                   {!cartoonImageLoaded && (
@@ -299,13 +288,6 @@ export const ImageDetailsModal = ({ isVisible, onClose, item }: ImageDetailsModa
           </View>
         </TouchableOpacity>
       </Modal>
-
-      {/* Full screen image modal */}
-      <ImageModal
-        imageUrl={fullScreenImage}
-        isVisible={!!fullScreenImage}
-        onClose={handleFullScreenClose}
-      />
     </>
   );
 };

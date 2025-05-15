@@ -9,7 +9,7 @@ interface GenerationState {
   isLoading: boolean;
   isGeneratingInBackground: boolean;
   error: string | null;
-  generateImage: (imageUrl: string, variant: string) => Promise<void>;
+  generateImage: (imageUrl: string, variant: string, isPro: boolean) => Promise<void>;
   fetchGenerations: () => Promise<void>;
   deleteGeneration: (id: number) => Promise<boolean>;
   clearError: () => void;
@@ -21,7 +21,7 @@ export const useGenerationStore = create<GenerationState>((set, get) => ({
   isGeneratingInBackground: false,
   error: null,
 
-  generateImage: async (imageUrl: string, variant: string) => {
+  generateImage: async (imageUrl: string, variant: string, isPro: boolean) => {
     set({ isGeneratingInBackground: true, error: null });
     console.log('Starting image generation process (background state active)...');
     
@@ -41,6 +41,7 @@ export const useGenerationStore = create<GenerationState>((set, get) => ({
         headers: {
           ...headers,
           'Content-Type': 'multipart/form-data',
+          'ispro': isPro.toString(),
         },
       });
       console.log('Received response from backend:', response.status);
