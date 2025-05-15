@@ -70,4 +70,4 @@ export interface Generation {
 }
 
 // Define frontend variant type and options
-export type ImageVariantFrontend = 'pixar' | 'ghiblix' | 'sticker' | 'plushy';
+export type ImageVariantFrontend = 'pixar' | 'ghiblix' | 'sticker' | 'plushy' | 'kawaii' | 'anime';

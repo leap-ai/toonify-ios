@@ -43,6 +43,7 @@ export const VARIANT_OPTIONS: {
   { label: 'Sticker', value: 'sticker', image: require('@/assets/images/sticker.png'), isPro: true },
   { label: 'Pixar', value: 'pixar', image: require('@/assets/images/pixar.png'), isPro: true },
   { label: 'Plushy', value: 'plushy', image: require('@/assets/images/plushy.png'), isPro: true },
+  { label: 'Kawaii', value: 'kawaii', image: require('@/assets/images/kawaii.png'), isPro: true },
 ];
 
 // Define best practices data structure
@@ -50,7 +51,8 @@ const BEST_PRACTICES: Record<ImageVariantFrontend, string[]> = {
   pixar: [
     "Clear, well-lit portrait or upper body shots work best.",
     "Avoid very busy backgrounds for optimal focus on the subject.",
-    "1-2 people maximum for best character detail."
+    "1-2 people maximum for best character detail.",
+    "Try choosing pictures without glasses since Pixar style focusses on the eyes."
   ],
   ghiblix: [
     "Scenic shots or expressive character faces are great.",
@@ -67,6 +69,20 @@ const BEST_PRACTICES: Record<ImageVariantFrontend, string[]> = {
     "Good lighting helps define the 'plush' texture.",
     "Avoid overly complex details that might get lost."
   ],
+  kawaii: [
+    "Use simple, front-facing portraits for best results.",
+    "Avoid detailed or noisy backgrounds — plain is ideal.",
+    "Soft lighting works better than dramatic shadows.",
+    "Close-up shots of faces or cute objects yield more accurate 'kawaii' styling.",
+    "Avoid sunglasses or harsh expressions — neutral or smiling faces are best."
+  ],
+  anime: [
+    "High-resolution face or upper-body shots work best.",
+    "Well-lit images with clear facial features improve stylization.",
+    "Neutral or light expressions adapt best into anime character emotions.",
+    "Avoid group shots — stick to 1-2 persons per image.",
+    "Avoid heavy makeup or filters that may confuse the AI model."
+  ]
 };
 
 const ANALYTICS_EVENTS = {
