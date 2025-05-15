@@ -40,7 +40,6 @@ export default function CreateCard({
 }: CreateCardProps) {
   const { getCurrentTheme } = useAppTheme();
   const theme = getCurrentTheme();
-  const currentTips = BEST_PRACTICES[selectedVariant] || [];
 
   // Animation setup
   const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -267,40 +266,6 @@ export default function CreateCard({
               {isLoading ? 'Generating...' : 'Generate Toon'}
             </Text>
           </Button>
-          
-          {/* Best Practices Section */}
-          {currentTips.length > 0 && (
-            <YStack 
-              space="$2" 
-              marginTop="$4" 
-              padding="$3" 
-              borderRadius="$3" 
-              backgroundColor="$backgroundFocus"
-              borderColor={theme.cardBorder}
-              borderWidth={1}
-            >
-              <XStack alignItems="center" space="$2">
-                <Info size={16} color={theme.text.secondary} />
-                <SizableText size="$5" fontWeight="bold" color={theme.text.primary}>
-                  Tips for Best Results with {selectedVariantLabel(selectedVariant)}:
-                </SizableText>
-              </XStack>
-              {currentTips.map((tip, index) => (
-                <Text style={styles.tipItem} key={index} fontSize="$3" color={theme.text.primary} marginLeft="$2">
-                  {tip}
-                </Text>
-              ))}
-            </YStack>
-          )}
-          <Text 
-            fontSize="$2" 
-            color={theme.text.warning} 
-            textAlign="left" 
-            marginTop="$2"
-            paddingHorizontal="$1"
-          >
-            {APP_DISCLAIMER}
-          </Text>
         </YStack>
       </YStack>
     </Card>
@@ -320,8 +285,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   uploadBox: {
-    width: 200,
-    height: 150,
+    width: 250,
+    height: 250,
     borderRadius: 8,
     borderWidth: 2,
     borderStyle: 'dashed',
@@ -333,8 +298,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   image: {
-    width: 300,
-    height: 300,
+    width: 250,
+    height: 250,
     borderRadius: 8,
   },
   dismissButtonCard: {

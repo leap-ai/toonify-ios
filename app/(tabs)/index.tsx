@@ -4,6 +4,7 @@ import { useAppTheme } from '@/context/ThemeProvider';
 import { useSubscriptionStore } from '@/stores/subscription';
 import { useGenerationStore } from '@/stores/generation';
 import CreateCard from '@/components/CreateCard';
+import TipsModal from '@/components/TipsModal';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { 
@@ -14,6 +15,8 @@ import { useCredits } from '@/hooks/useCredits';
 import { ImageVariantFrontend } from '@/utils/types';
 import { ANALYTICS_EVENTS, VARIANT_OPTIONS } from '@/utils/constants';
 import { usePostHog } from 'posthog-react-native';
+import { Button, XStack } from 'tamagui';
+import { Info } from '@tamagui/lucide-icons';
 
 export default function GenerateScreen() {
   const posthog = usePostHog();
@@ -32,6 +35,7 @@ export default function GenerateScreen() {
   const [localError, setLocalError] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedVariant, setSelectedVariant] = useState<ImageVariantFrontend>(VARIANT_OPTIONS[0].value);
+  const [isTipsModalVisible, setIsTipsModalVisible] = useState(false);
   
   useEffect(() => {
     registerForPushNotificationsAsync();
@@ -73,6 +77,7 @@ export default function GenerateScreen() {
   };
 
   const handleGenerate = async () => {
+    const variantName = VARIANT_OPTIONS.find(v => v.value === selectedVariant)?.label;
     if (!selectedImage) {
       const errorMessage = 'Please select an image first.';
       setLocalError(errorMessage);
@@ -80,35 +85,53 @@ export default function GenerateScreen() {
       return;
     }
 
-    schedulePushNotification('Generation Started', `Your ${selectedVariant} is being created.`);
+    schedulePushNotification('Generation Started', `Your ${variantName} Cartoon is being created in the background.`);
 
     try {
-      await generateImage(selectedImage, selectedVariant);
+      await generateImage(selectedImage, selectedVariant, isActiveProMember);
       const genError = useGenerationStore.getState().error;
-      if (!genError) {
-        if (posthog) {
-          posthog.capture(ANALYTICS_EVENTS.CARTOON_GENERATED, {
-            cartoon_variant: selectedVariant,
-          });
-        }
-        router.push('/(tabs)/history');
-        schedulePushNotification('Toonified Picture Ready!', `Open app to see your new ${selectedVariant} image.`);
-        setSelectedImage(null);
-        setLocalError(null);
-      } 
+      if (genError) {
+        throw new Error(genError);
+      }
+      if (posthog) {
+        posthog.capture(ANALYTICS_EVENTS.CARTOON_GENERATED, {
+          cartoon_variant: selectedVariant,
+        });
+      }
+      router.push('/(tabs)/history');
+      schedulePushNotification('Toonified Picture Ready!', `Open app to see your new ${variantName} Cartoon.`);
+      setSelectedImage(null);
+      setLocalError(null);
     } catch (err) {
       console.error('Error during generateImage call in component:', err);
-      if (!useGenerationStore.getState().error) {
+      if (!err) {
         const errorMessage = 'Failed to generate image. Please try again.';
-      setLocalError(errorMessage);
-      Alert.alert('Error', errorMessage);
-    }
+        setLocalError(errorMessage);
+        Alert.alert('Error', errorMessage);
+      }
     }
   };
   
   return (
     <View style={[styles.container, { backgroundColor: theme.screenBackground }]}>
       <ScrollView contentContainerStyle={{ flexGrow: 1, alignItems: 'center' }}>
+        <XStack 
+          width="100%" 
+          justifyContent="flex-end" 
+          paddingHorizontal="$4" 
+          paddingBottom="$2"
+        >
+          <Button
+            size="$2"
+            backgroundColor={theme.button.secondary.background}
+            color={theme.button.secondary.text}
+            fontWeight="400"
+            onPress={() => setIsTipsModalVisible(true)}
+            icon={<Info size={16} color={theme.button.secondary.text} />}
+          >
+            Tips
+          </Button>
+        </XStack>
         <CreateCard 
           error={localError}
           selectedImage={selectedImage}
@@ -122,6 +145,12 @@ export default function GenerateScreen() {
           isActiveProMember={isActiveProMember}
         />
       </ScrollView>
+
+      <TipsModal
+        isVisible={isTipsModalVisible}
+        onClose={() => setIsTipsModalVisible(false)}
+        variant={selectedVariant}
+      />
     </View>
   );
 }

@@ -40,10 +40,11 @@ export const VARIANT_OPTIONS: {
   isPro: boolean;
 }[] = [
   { label: 'Ghibli', value: 'ghiblix', image: require('@/assets/images/ghiblix.png'), isPro: false },
-  { label: 'Sticker', value: 'sticker', image: require('@/assets/images/sticker.png'), isPro: true },
+  { label: 'Sticker', value: 'sticker', image: require('@/assets/images/sticker.png'), isPro: false },
   { label: 'Pixar', value: 'pixar', image: require('@/assets/images/pixar.png'), isPro: true },
   { label: 'Plushy', value: 'plushy', image: require('@/assets/images/plushy.png'), isPro: true },
   { label: 'Kawaii', value: 'kawaii', image: require('@/assets/images/kawaii.png'), isPro: true },
+  { label: 'Anime', value: 'anime', image: require('@/assets/images/anime.png'), isPro: true },
 ];
 
 // Define best practices data structure
