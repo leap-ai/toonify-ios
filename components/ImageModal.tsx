@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Image, Modal, StyleSheet, TouchableWithoutFeedback } from 'react-native';
 import { Button, Spinner } from 'tamagui';
 import { X } from 'lucide-react-native';
@@ -18,7 +18,7 @@ export const ImageModal = ({ imageUrl, isVisible, onClose, children }: ImageModa
   const theme = getCurrentTheme();
   
   // Reset loading state when modal becomes visible or image changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (isVisible) {
       setImageLoading(true);
     }
@@ -28,8 +28,9 @@ export const ImageModal = ({ imageUrl, isVisible, onClose, children }: ImageModa
 
   return (
     <Modal
+      id="image-full-screen"
       visible={isVisible}
-      transparent={true}
+      transparent={false}
       animationType="fade"
       onRequestClose={onClose}
     >
@@ -88,7 +89,7 @@ const styles = StyleSheet.create({
     zIndex: 0,
   },
   fullScreenImage: {
-    width: '95%',
-    height: '95%',
+    width: 100,
+    height: 100,
   },
 }); 

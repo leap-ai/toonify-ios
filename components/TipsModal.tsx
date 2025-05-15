@@ -55,7 +55,7 @@ export default function TipsModal({ isVisible, onClose, variant }: TipsModalProp
             {currentTips.map((tip, index) => (
               <XStack key={index} space="$2" alignItems="flex-start">
                 <Text color={theme.text.primary} fontSize="$4">•</Text>
-                <Text color={theme.text.primary} fontSize="$4" flex={1}>
+                <Text color={theme.text.primary} fontSize="$3" flex={1}>
                   {tip}
                 </Text>
               </XStack>
